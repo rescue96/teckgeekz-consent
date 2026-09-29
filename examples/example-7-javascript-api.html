@@ -39,6 +39,7 @@
             <button type="button" class="btn" id="btn-open">Open</button>
             <button type="button" class="btn" id="btn-close">Close</button>
             <button type="button" class="btn" id="btn-destroy">Destroy</button>
+            <button type="button" class="btn" id="btn-open-pref" style="border-color: #38bdf8; color: #38bdf8;">openPreferences()</button>
           </div>
 
           <h3>Status &amp; Verification</h3>
@@ -140,6 +141,11 @@
       document.getElementById('btn-close').onclick = function (e) {
         log("Calling <em>close()</em>");
         p.close();
+      };
+
+      document.getElementById('btn-open-pref').onclick = function (e) {
+        log("Calling <em>openPreferences()</em>");
+        p.openPreferences();
       };
 
       document.getElementById('btn-destroy').onclick = function (e) {

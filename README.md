@@ -1,6 +1,6 @@
 # teckgeekz-consent
 
-[![npm version](https://img.shields.io/badge/version-3.1.2-blue.svg)](https://github.com/rescue96/teckgeekz-consent)
+[![npm version](https://img.shields.io/badge/version-3.1.4-blue.svg)](https://github.com/rescue96/teckgeekz-consent)
 [![Maintained by: Teckgeekz](https://img.shields.io/badge/Maintained%20by-Teckgeekz-0284c7.svg)](https://teckgeekz.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./licence)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rescue96/teckgeekz-consent/pulls)
@@ -650,7 +650,7 @@ npm run build
 npm run verify
 
 # Build release tag
-npm run build:release --tag=3.1.2
+npm run build:release --tag=3.1.4
 ```
 
 ---
@@ -675,7 +675,7 @@ npm run build
 npm run verify
 
 # Build release tag with automated version bump
-npm run build:release --tag=3.1.2
+npm run build:release --tag=3.1.4
 ```
 
 ---
