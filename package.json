@@ -1,6 +1,6 @@
 {
   "name": "teckgeekz-consent",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "description": "Cookie Consent for Teckgeekz website",
   "main": "build/cookieconsent.min.js",
   "devDependencies": {

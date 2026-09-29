@@ -105,6 +105,30 @@ function setupMockDom() {
   documentMock.head = documentMock.createElement('head');
   documentMock.body = documentMock.createElement('body');
 
+  const elementsById = {};
+  documentMock.getElementById = function(id) {
+    return elementsById[id] || null;
+  };
+  documentMock.body.insertAdjacentHTML = function(position, html) {
+    ['cookie-modal', 'analytics-consent', 'marketing-consent', 'essential-cookies', 'cookie-modal-reject', 'cookie-modal-save'].forEach(function(id) {
+      if (html.indexOf('id="' + id + '"') !== -1) {
+        const el = documentMock.createElement('div');
+        el.id = id;
+        el.checked = false;
+        elementsById[id] = el;
+      }
+    });
+  };
+  documentMock.addEventListener = function(event, fn) {
+    listeners[event] = listeners[event] || [];
+    listeners[event].push(fn);
+  };
+  documentMock.removeEventListener = function(event, fn) {
+    if (listeners[event]) {
+      listeners[event] = listeners[event].filter(function(cb) { return cb !== fn; });
+    }
+  };
+
   const windowMock = {
     document: documentMock,
     navigator: {
@@ -281,3 +305,38 @@ test('onWindowClick handles event without evt.path using composedPath or fallbac
 
   assert.strictEqual(dismissed, true);
 });
+
+test('createCookieModal and popup.openPreferences support teckgeekz granular consent', () => {
+  const { documentMock } = setupMockDom();
+  delete require.cache[require.resolve('../src/cookieconsent.js')];
+  const cookieconsent = require('../src/cookieconsent.js');
+
+  assert.strictEqual(typeof cookieconsent.createCookieModal, 'function');
+
+  let savedRecord = null;
+  let gtagConsent = null;
+
+  const modalController = cookieconsent.createCookieModal({
+    storeConsentRecord: function(analytics, marketing) {
+      savedRecord = { analytics, marketing };
+    },
+    updateGtagConsent: function(analytics, marketing) {
+      gtagConsent = { analytics, marketing };
+    }
+  });
+
+  assert.ok(modalController, 'createCookieModal returns controller');
+  assert.strictEqual(typeof modalController.open, 'function');
+  assert.strictEqual(typeof modalController.close, 'function');
+
+  // Verify popup can open preferences
+  const popup = new cookieconsent.Popup({
+    theme: 'teckgeekz',
+    type: 'opt-in-customize'
+  });
+
+  assert.strictEqual(typeof popup.openPreferences, 'function');
+  const openedModal = popup.openPreferences();
+  assert.ok(openedModal, 'popup.openPreferences returned modal controller');
+});
+

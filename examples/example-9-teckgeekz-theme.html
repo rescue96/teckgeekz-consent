@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="../">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Demo 9 - Teckgeekz Theme &amp; Cookie Preferences Modal | teckgeekz-consent</title>
+
+  <link href="examples/style.css" rel="stylesheet">
+  <link href="build/cookieconsent.min.css" rel="stylesheet">
+
+  <style>
+    body.example9 {
+      background: radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 100%);
+    }
+
+    .badge-teckgeekz {
+      display: inline-block;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 20px auto;
+      max-width: 650px;
+      text-align: left;
+    }
+
+    .status-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+    }
+
+    .status-card-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+
+    .status-card-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f8fafc;
+      font-family: monospace;
+    }
+
+    .status-card-val.active {
+      color: #38bdf8;
+    }
+
+    .status-card-val.denied {
+      color: #f87171;
+    }
+  </style>
+
+  <!-- Google Consent Mode default state -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'analytics_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied'
+    });
+  </script>
+</head>
+
+<body class="example9" role="document">
+
+  <div class="demo-topbar">
+    <div class="brand">teckgeekz-<span>consent</span></div>
+    <div>
+      <a href="examples/index.html">&larr; Back to All Demos</a> &bull;
+      <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>
+    </div>
+  </div>
+
+  <div class="center-outer fit">
+    <div class="center-inner">
+      <div class="example-window" role="main" style="padding-top: 50px;">
+
+        <div class="badge-teckgeekz">Featured Theme</div>
+        <h1><span>Demo 9</span> Teckgeekz Theme &amp; Preferences Modal</h1>
+
+        <p>
+          Showcasing the flagship <code>theme: 'teckgeekz'</code> aesthetic and the integrated granular cookie preferences modal provided by <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>.
+        </p>
+
+        <p style="font-size: 14px; opacity: 0.85; max-width: 620px; margin: 0 auto 16px;">
+          Includes modern glassmorphic styling, pill revoke button, and multi-category consent for <strong>Essential</strong>, <strong>Analytics</strong>, and <strong>Marketing</strong> cookies with automatic GDPR audit records and Google Consent Mode sync.
+        </p>
+
+        <div class="btn-group">
+          <button type="button" class="btn" id="btn-reopen">Show Cookie Banner</button>
+          <button type="button" class="btn" id="btn-modal" style="border-color: #38bdf8; color: #38bdf8;">Open Preferences Modal</button>
+          <button type="button" class="btn" id="btn-clear">Reset All Consent</button>
+        </div>
+
+        <div class="status-grid">
+          <div class="status-card">
+            <div class="status-card-label">Banner Status</div>
+            <div id="stat-banner" class="status-card-val">Loading...</div>
+          </div>
+          <div class="status-card">
+            <div class="status-card-label">Analytics Cookie</div>
+            <div id="stat-analytics" class="status-card-val">not set</div>
+          </div>
+          <div class="status-card">
+            <div class="status-card-label">Marketing Cookie</div>
+            <div id="stat-marketing" class="status-card-val">not set</div>
+          </div>
+        </div>
+
+        <h3>Event &amp; Audit Log</h3>
+        <pre id="console" style="max-height: 200px;"></pre>
+
+        <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
+        <a href="examples/index.html" class="page-switcher page-switcher-next" title="Back to Index">&#9654;</a>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="examples/script.js"></script>
+  <script src="build/cookieconsent.min.js"></script>
+  <script>
+    var logEl = document.getElementById('console');
+
+    function logEvent(title, detail) {
+      var txt = detail ? ' - ' + (typeof detail === 'object' ? JSON.stringify(detail) : detail) : '';
+      logEl.innerHTML += timeStamp() + '<strong>' + title + '</strong>' + txt + '<br>';
+      logEl.scrollTop = logEl.scrollHeight;
+      updateStatusDisplay();
+    }
+
+    function getCookie(name) {
+      var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+      return match ? decodeURIComponent(match[3]) : null;
+    }
+
+    function updateStatusDisplay() {
+      var bannerStat = consentPopup ? (consentPopup.getStatus() || 'unanswered') : 'unanswered';
+      var aVal = getCookie('analytics');
+      var mVal = getCookie('marketing');
+
+      var bannerEl = document.getElementById('stat-banner');
+      var aEl = document.getElementById('stat-analytics');
+      var mEl = document.getElementById('stat-marketing');
+
+      bannerEl.innerText = bannerStat;
+      bannerEl.className = 'status-card-val ' + (bannerStat === 'allow' ? 'active' : (bannerStat === 'deny' ? 'denied' : ''));
+
+      aEl.innerText = aVal !== null ? aVal : 'not set';
+      aEl.className = 'status-card-val ' + (aVal === 'true' ? 'active' : (aVal === 'false' ? 'denied' : ''));
+
+      mEl.innerText = mVal !== null ? mVal : 'not set';
+      mEl.className = 'status-card-val ' + (mVal === 'true' ? 'active' : (mVal === 'false' ? 'denied' : ''));
+    }
+
+    // Custom GDPR Consent audit recorder
+    function storeConsentRecord(analytics, marketing) {
+      var record = {
+        timestamp: new Date().toISOString(),
+        categories: {
+          essential: true,
+          analytics: !!analytics,
+          marketing: !!marketing
+        },
+        userAgent: navigator.userAgent
+      };
+      logEvent('GDPR Consent Record Stored', record);
+    }
+
+    // Google Consent Mode updater
+    function updateGtagConsent(analyticsState, marketingState) {
+      gtag('consent', 'update', {
+        'analytics_storage': analyticsState,
+        'ad_storage': marketingState,
+        'ad_user_data': marketingState,
+        'ad_personalization': marketingState
+      });
+      logEvent('gtag consent update', { analytics: analyticsState, marketing: marketingState });
+    }
+
+    var consentPopup;
+
+    cookieconsent.initialise({
+      theme: 'teckgeekz',
+      position: 'bottom',
+      type: 'opt-in-customize',
+      content: {
+        message: 'We use cookies and similar technologies to enhance your experience, analyze site usage, and support our marketing efforts.',
+        link: 'Cookie Policy',
+        href: 'https://teckgeekz.com/privacy-policy',
+        allow: 'Accept All',
+        deny: 'Reject All',
+        customize: 'Cookie Settings'
+      },
+      onInitialise: function(status) {
+        logEvent('Cookie banner initialized', 'Status: ' + (status || 'unanswered'));
+      },
+      onStatusChange: function(status) {
+        logEvent('Status changed', status);
+      },
+      onRevokeChoice: function() {
+        logEvent('Revoke choice clicked', 'Consent cleared');
+      }
+    }, function(popup) {
+      consentPopup = popup;
+      updateStatusDisplay();
+    });
+
+    // Button controls
+    document.getElementById('btn-reopen').addEventListener('click', function() {
+      if (consentPopup) {
+        consentPopup.open();
+        logEvent('Banner opened manually');
+      }
+    });
+
+    document.getElementById('btn-modal').addEventListener('click', function() {
+      if (consentPopup) {
+        consentPopup.openPreferences({
+          privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy'
+        });
+      } else {
+        var modal = cookieconsent.createCookieModal({
+          privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy'
+        });
+        if (modal) modal.open();
+      }
+      logEvent('Preferences modal opened');
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', function() {
+      if (consentPopup) {
+        consentPopup.clearStatus();
+      }
+      document.cookie = 'analytics=; path=/; max-age=-1';
+      document.cookie = 'marketing=; path=/; max-age=-1';
+      updateGtagConsent('denied', 'denied');
+      logEvent('Consent reset', 'All cookies cleared');
+    });
+  </script>
+</body>
+
+</html>

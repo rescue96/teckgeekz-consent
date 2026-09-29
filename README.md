@@ -23,9 +23,11 @@ Maintained and enhanced by **[Teckgeekz](https://teckgeekz.com)**. This project 
   - [2. Opt-In Mode (GDPR / Google Consent Mode v2)](#2-opt-in-mode-gdpr--google-consent-mode-v2)
   - [3. Opt-Out Mode (CCPA / US Compliance)](#3-opt-out-mode-ccpa--us-compliance)
   - [4. Next.js / React Integration](#4-nextjs--react-integration)
+  - [5. Teckgeekz Theme & Granular Preferences Modal](#5-teckgeekz-theme--granular-preferences-modal)
 - [JavaScript API Reference](#javascript-api-reference)
   - [Initialization](#initialization)
   - [Popup Instance Methods](#popup-instance-methods)
+  - [Teckgeekz Cookie Preferences Modal API](#teckgeekz-cookie-preferences-modal-api)
   - [Status Constants](#status-constants)
 - [Configuration Options](#configuration-options)
   - [General Settings](#general-settings)
@@ -50,15 +52,17 @@ Key enhancements in `teckgeekz-consent`:
 - **Enhanced Accessibility & SEO**: Accessible ARIA roles (`role="dialog"`, `aria-label`, `aria-describedby`, keyboard navigation) and Googlebot exclusion tags (`<!--googleoff: all-->`).
 - **Secure Link Handling**: Out-of-the-box `rel="noopener noreferrer nofollow"` attributes on policy links.
 - **Framework-Friendly**: Clean lifecycle methods (`open`, `close`, `destroy`) for seamless mounting/unmounting in Single-Page Applications (Next.js, React, Vue, Svelte).
+- **Teckgeekz Granular Modal**: Built-in interactive category modal (Essential, Analytics, Marketing) with zero external dependencies.
 
 ---
 
 ## Features
 
 - **⚡ Zero External Dependencies**: Pure vanilla JavaScript and modular CSS.
-- **🛡️ 3 Compliance Levels**: Simple notice (`info`), prior consent required (`opt-in`), or opt-out consent (`opt-out`).
+- **🛡️ 3+ Compliance Levels**: Simple notice (`info`), prior consent required (`opt-in`), opt-out consent (`opt-out`), and granular customization (`opt-in-customize`).
+- **✨ Flagship `teckgeekz` Theme & Preferences Modal**: Premium dark glassmorphic UI paired with an accessible category preferences modal for Essential, Analytics, and Marketing cookies, automatic GDPR audit log generation, and Google Consent Mode v2 sync.
 - **🌍 Geolocation Support**: Automatically adapt banner behavior based on the visitor's country (e.g. strict opt-in in the EU, dismissible in non-regulated regions).
-- **🎨 Flexible UI & Themes**: Built-in positions (`top`, `bottom`, `floating`), layouts (`basic`, `basic-close`, `basic-header`), and themes (`block`, `classic`, `edgeless`).
+- **🎨 Flexible UI & Themes**: Built-in positions (`top`, `bottom`, `floating`), layouts (`basic`, `basic-close`, `basic-header`), and themes (`block`, `classic`, `edgeless`, `teckgeekz`).
 - **🔄 Lifecycle Hooks**: Granular callbacks for banner open, close, status change, and consent revocation.
 - **🔁 Revoke Consent Option**: Optional floating tab allowing users to change their consent choices at any time.
 
@@ -152,6 +156,7 @@ Then navigate to: **`http://localhost:3000/examples/`** (or port 8080) to access
 | **Demo 6** | [`examples/example-6-location.html`](./examples/example-6-location.html) | **Geolocation & Regional Law**: Automatically tests and demonstrates how cookie law varies by country (US, UK, DE, ES, BE, etc.). |
 | **Demo 7** | [`examples/example-7-javascript-api.html`](./examples/example-7-javascript-api.html) | **JavaScript API & Verification**: Interactive playground for `open()`, `close()`, `destroy()`, `setStatus()`, `hasConsented()`, and `hasAnswered()`. |
 | **Demo 8** | [`examples/example-8-google-consent-mode.html`](./examples/example-8-google-consent-mode.html) | **Google Consent Mode v2 & GTM**: Live integration updating Google Analytics & Ads consent signals and pushing dataLayer events. |
+| **Demo 9** | [`examples/example-9-teckgeekz-theme.html`](./examples/example-9-teckgeekz-theme.html) | **Teckgeekz Theme & Preferences Modal**: Flagship dark glassmorphic banner with integrated granular consent modal (Essential, Analytics, Marketing), audit logging, and live status dashboard. |
 
 ---
 
@@ -335,6 +340,43 @@ export function CookieBanner() {
 
 ---
 
+### 5. Teckgeekz Theme & Granular Preferences Modal
+
+The `teckgeekz` theme provides a sleek, dark-mode glassmorphic design paired with an interactive multi-category preferences modal for GDPR and ePrivacy compliance.
+
+```html
+<link rel="stylesheet" href="build/cookieconsent.min.css">
+<script src="build/cookieconsent.min.js"></script>
+
+<script>
+  window.cookieconsent.initialise({
+    theme: 'teckgeekz',
+    position: 'bottom',
+    type: 'opt-in-customize', // Renders Reject All, Customize, and Accept All buttons
+    content: {
+      message: 'We use cookies to enhance your experience, analyze site usage, and support our marketing efforts.',
+      allow: 'Accept All',
+      deny: 'Reject All',
+      customize: 'Cookie Settings',
+      link: 'Privacy Policy',
+      href: 'https://teckgeekz.com/privacy-policy'
+    }
+  }, function(popup) {
+    // Access popup instance or open modal on demand:
+    // popup.openPreferences();
+  });
+</script>
+```
+
+When visitors click the **Cookie Settings** button or invoke `popup.openPreferences()` / `cookieconsent.createCookieModal().open()`, a modal opens allowing them to configure granular categories:
+- **Essential Cookies**: Strictly necessary for core website functionality (always locked on).
+- **Analytics Cookies**: Measures site performance and user navigation.
+- **Marketing Cookies**: Powers retargeting, ads, and campaign tracking.
+
+Saving or rejecting preferences automatically updates `analytics` and `marketing` cookies (`SameSite=Strict`), logs GDPR audit records via `storeConsentRecord()`, and updates `gtag('consent', 'update', ...)` signals in real-time.
+
+---
+
 ## JavaScript API Reference
 
 ### Initialization
@@ -363,8 +405,37 @@ The instance returned by `initialise` provides the following methods:
 | `popup.getStatus()` | None | Retrieves the current cookie consent status string. |
 | `popup.clearStatus()` | None | Clears the stored cookie consent status cookie. |
 | `popup.revokeChoice(preventOpen)` | `preventOpen?: boolean` | Clears stored consent and reopens the banner dialog (unless `preventOpen` is `true`). |
+| `popup.openPreferences(options)` | `options?: object` | Opens the Teckgeekz granular cookie preferences modal (Essential, Analytics, Marketing). |
 | `popup.hasAnswered()` | None | Returns `true` if the user has previously answered the prompt. |
 | `popup.hasConsented()` | None | Returns `true` if consent is considered granted under current type (`opt-in`, `opt-out`, `info`). |
+
+### Teckgeekz Cookie Preferences Modal API
+
+`teckgeekz-consent` includes an integrated, zero-dependency modal controller for managing multi-category cookie preferences:
+
+```javascript
+// Create or retrieve the preferences modal controller
+const modal = window.cookieconsent.createCookieModal({
+  privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy',
+  onSave: function(consents) {
+    console.log('Preferences saved:', consents);
+    // e.g. { analytics: true, marketing: false }
+  },
+  onReject: function() {
+    console.log('Non-essential cookies rejected');
+  },
+  storeConsentRecord: function(analytics, marketing) {
+    // Custom audit recorder (defaults to localStorage JSON audit log)
+  },
+  updateGtagConsent: function(analyticsState, marketingState) {
+    // Custom Google Consent Mode updater (defaults to window.gtag update)
+  }
+});
+
+// Programmatic controls:
+modal.open();   // Opens the preferences modal and syncs current cookie states
+modal.close();  // Hides the preferences modal
+```
 
 ### Status Constants
 
@@ -384,9 +455,9 @@ window.cookieconsent.status = {
 
 | Option | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `type` | `string` | `'info'` | Compliance type: `'info'`, `'opt-in'`, or `'opt-out'`. |
+| `type` | `string` | `'info'` | Compliance type: `'info'`, `'opt-in'`, `'opt-out'`, `'opt-in-customize'`, or `'opt-out-customize'`. |
 | `position` | `string` | `'bottom'` | Position: `'bottom'`, `'top'`, `'top-left'`, `'top-right'`, `'bottom-left'`, `'bottom-right'`. |
-| `theme` | `string` | `'block'` | Built-in theme: `'block'`, `'classic'`, or `'edgeless'`. |
+| `theme` | `string` | `'block'` | Built-in theme: `'block'`, `'classic'`, `'edgeless'`, or `'teckgeekz'`. |
 | `layout` | `string` | `'basic'` | Layout template: `'basic'`, `'basic-close'`, `'basic-header'`. |
 | `static` | `boolean` | `false` | If `true`, renders statically within page flow instead of fixed positioning. |
 | `autoOpen` | `boolean` | `true` | Whether to automatically show the banner when unhandled. |
@@ -432,6 +503,7 @@ content: {
   dismiss: 'Got it!',
   allow: 'Allow cookies',
   deny: 'Decline',
+  customize: 'Customize', // Used in opt-in-customize / opt-out-customize compliance types
   link: 'Learn more',
   href: 'https://www.cookiesandyou.com',
   close: '&#x274c;',
