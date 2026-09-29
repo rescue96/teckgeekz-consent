@@ -9,7 +9,7 @@
   <title>Demo 9 - Teckgeekz Theme &amp; Cookie Preferences Modal | teckgeekz-consent</title>
 
   <link href="examples/style.css" rel="stylesheet">
-  <link href="build/cookieconsent.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" rel="stylesheet">
 
   <style>
     body.example9 {
@@ -142,7 +142,7 @@
   </div>
 
   <script src="examples/script.js"></script>
-  <script src="build/cookieconsent.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
   <script>
     var logEl = document.getElementById('console');
 
@@ -214,8 +214,8 @@
       },
       content: {
         message: 'We use cookies and similar technologies to enhance your experience, analyze site usage, and support our marketing efforts.',
-        link: 'Cookie Policy',
-        href: 'https://teckgeekz.com/privacy-policy',
+        link: 'Learn more',
+        href: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
         allow: 'Accept All',
         deny: 'Reject All',
         customize: 'Cookie Settings'
@@ -245,11 +245,11 @@
     document.getElementById('btn-modal').addEventListener('click', function() {
       if (consentPopup) {
         consentPopup.openPreferences({
-          privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy'
+          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
         });
       } else {
         var modal = cookieconsent.createCookieModal({
-          privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy'
+          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
         });
         if (modal) modal.open();
       }

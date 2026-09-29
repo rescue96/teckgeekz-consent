@@ -102,6 +102,11 @@ window['cookieconsent_example_util'] = {
 
       myOpts.autoOpen = false;
 
+      myOpts.content = myOpts.content || {};
+      if (!myOpts.content.href) {
+        myOpts.content.href = 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies';
+      }
+
       options.cookieconsent.initialise(
         myOpts,
         function(idx, popup) {

@@ -1,11 +1,12 @@
 # teckgeekz-consent
 
-[![npm version](https://img.shields.io/badge/version-3.1.4-blue.svg)](https://github.com/rescue96/teckgeekz-consent)
+[![npm version](https://img.shields.io/npm/v/teckgeekz-consent.svg?color=0284c7)](https://www.npmjs.com/package/teckgeekz-consent)
+[![jsDelivr](https://data.jsdelivr.com/v1/package/npm/teckgeekz-consent/badge)](https://www.jsdelivr.com/package/npm/teckgeekz-consent)
 [![Maintained by: Teckgeekz](https://img.shields.io/badge/Maintained%20by-Teckgeekz-0284c7.svg)](https://teckgeekz.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./licence)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rescue96/teckgeekz-consent/pulls)
 
-A lightweight, accessible, zero-dependency JavaScript plugin for alerting users about cookie usage and managing privacy compliance on modern websites.
+A lightweight, accessible, zero-dependency JavaScript plugin for alerting users about cookie usage and managing privacy compliance on modern websites. Available on [npm (teckgeekz-consent)](https://www.npmjs.com/package/teckgeekz-consent) and global CDNs.
 
 Maintained and enhanced by **[Teckgeekz](https://teckgeekz.com)**. This project is a maintained fork of [Osano Cookie Consent](https://github.com/osano/cookieconsent) (originally developed by Silktide / Insites), modernized with robust tooling, full keyboard and ARIA accessibility, Google Consent Mode v2 support, and zero-leak lifecycle management for modern web frameworks.
 
@@ -71,24 +72,55 @@ Key enhancements in `teckgeekz-consent`:
 
 ## Installation
 
-### Via npm or Yarn
+### Option 1: Direct CDN Inclusion (Fastest, zero build setup)
+
+Add the stylesheet to your `<head>` and the script before your closing `</body>` tag. Powered by global, ultra-fast CDNs:
+
+#### Via jsDelivr (Recommended)
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+```
+
+#### Via unpkg
+```html
+<link rel="stylesheet" href="https://unpkg.com/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" />
+<script src="https://unpkg.com/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+```
+
+---
+
+### Option 2: Package Managers (NPM, Yarn, pnpm)
+
+For modern web frameworks (Next.js, React, Vue, Vite, Nuxt, Webpack):
 
 ```bash
 npm install teckgeekz-consent
 # or
 yarn add teckgeekz-consent
+# or
+pnpm add teckgeekz-consent
 ```
 
-### Direct Script / Stylesheet Inclusion
+Import into your JavaScript / TypeScript files:
 
-Include the compiled CSS in your `<head>` and the JS before the closing `</body>` tag:
+```javascript
+import 'teckgeekz-consent/build/cookieconsent.min.css';
+import cookieconsent from 'teckgeekz-consent';
+```
+
+*(Full TypeScript types are included out of the box via `index.d.ts`).*
+
+---
+
+### Option 3: Local / Self-Hosted Assets
+
+If self-hosting the distribution assets:
 
 ```html
-<link rel="stylesheet" href="node_modules/teckgeekz-consent/build/cookieconsent.min.css" />
-<script src="node_modules/teckgeekz-consent/build/cookieconsent.min.js"></script>
+<link rel="stylesheet" href="/path/to/cookieconsent.min.css" />
+<script src="/path/to/cookieconsent.min.js"></script>
 ```
-
-*(Or reference your self-hosted or CDN assets).*
 
 ---
 
@@ -196,7 +228,8 @@ window.cookieconsent.initialise({
 ```html
 <head>
   <!-- Initialize default consent state early (wait_for_update: 500ms) -->
-  <script src="node_modules/teckgeekz-consent/build/cookieconsent.min.js"></script>
+  <!-- Via jsDelivr CDN (or local node_modules / build path) -->
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
   <script>
     // Sets ad_storage, analytics_storage, ad_user_data, and ad_personalization to 'denied'
     window.cookieconsent.initGoogleConsentMode({
@@ -342,8 +375,9 @@ export function CookieBanner() {
 The `teckgeekz` theme provides a sleek, dark-mode glassmorphic design paired with an interactive multi-category preferences modal for GDPR and ePrivacy compliance.
 
 ```html
-<link rel="stylesheet" href="build/cookieconsent.min.css">
-<script src="build/cookieconsent.min.js"></script>
+<!-- Via jsDelivr CDN (or local build path) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css">
+<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
 
 <script>
   window.cookieconsent.initialise({
@@ -539,7 +573,7 @@ content: {
   deny: 'Decline',
   customize: 'Customize', // Used in opt-in-customize / opt-out-customize compliance types
   link: 'Learn more',
-  href: 'https://www.cookiesandyou.com',
+  href: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
   close: '&#x274c;',
   target: '_blank',
   policy: 'Cookie Policy'

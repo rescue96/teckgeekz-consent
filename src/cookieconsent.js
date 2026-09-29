@@ -270,7 +270,7 @@
         deny: 'Decline',
         customize: 'Customize',
         link: 'Learn more',
-        href: 'https://www.cookiesandyou.com',
+        href: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
         close: '&#x274c;',
         target: '_blank',
         policy: 'Cookie Policy'
