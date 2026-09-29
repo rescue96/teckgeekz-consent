@@ -9,7 +9,7 @@
   <title>Demo 9 - Teckgeekz Theme &amp; Cookie Preferences Modal | teckgeekz-consent</title>
 
   <link href="examples/style.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.css" rel="stylesheet">
 
   <style>
     body.example9 {
@@ -103,16 +103,21 @@
         <h1><span>Demo 9</span> Teckgeekz Theme &amp; Preferences Modal</h1>
 
         <p>
-          Showcasing the flagship <code>theme: 'teckgeekz'</code> aesthetic and the integrated granular cookie preferences modal provided by <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>.
+          Showcasing the flagship <code>theme: 'teckgeekz'</code> aesthetic and the integrated granular cookie
+          preferences modal provided by <a href="https://teckgeekz.com" target="_blank"
+            rel="noopener noreferrer">teckgeekz.com</a>.
         </p>
 
         <p style="font-size: 14px; opacity: 0.85; max-width: 620px; margin: 0 auto 16px;">
-          Includes modern glassmorphic styling, pill revoke button, and multi-category consent for <strong>Essential</strong>, <strong>Analytics</strong>, and <strong>Marketing</strong> cookies with automatic GDPR audit records and Google Consent Mode sync.
+          Includes modern glassmorphic styling, pill revoke button, and multi-category consent for
+          <strong>Essential</strong>, <strong>Analytics</strong>, and <strong>Marketing</strong> cookies with automatic
+          GDPR audit records and Google Consent Mode sync.
         </p>
 
         <div class="btn-group">
           <button type="button" class="btn" id="btn-reopen">Show Cookie Banner</button>
-          <button type="button" class="btn" id="btn-modal" style="border-color: #38bdf8; color: #38bdf8;">Open Preferences Modal</button>
+          <button type="button" class="btn" id="btn-modal" style="border-color: #38bdf8; color: #38bdf8;">Open
+            Preferences Modal</button>
           <button type="button" class="btn" id="btn-clear">Reset All Consent</button>
         </div>
 
@@ -134,7 +139,8 @@
         <h3>Event &amp; Audit Log</h3>
         <pre id="console" style="max-height: 200px;"></pre>
 
-        <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
+        <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-prev"
+          title="Previous demo">&#9664;</a>
         <a href="examples/index.html" class="page-switcher page-switcher-next" title="Back to Index">&#9654;</a>
 
       </div>
@@ -142,7 +148,7 @@
   </div>
 
   <script src="examples/script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
   <script>
     var logEl = document.getElementById('console');
 
@@ -220,40 +226,40 @@
         deny: 'Reject All',
         customize: 'Cookie Settings'
       },
-      onInitialise: function(status) {
+      onInitialise: function (status) {
         logEvent('Cookie banner initialized', 'Status: ' + (status || 'unanswered'));
       },
-      onStatusChange: function(status) {
+      onStatusChange: function (status) {
         logEvent('Status changed', status);
       },
-      onRevokeChoice: function() {
+      onRevokeChoice: function () {
         logEvent('Revoke choice clicked', 'Consent cleared');
       }
-    }, function(popup) {
+    }, function (popup) {
       consentPopup = popup;
       updateStatusDisplay();
     });
 
     // Button controls
-    document.getElementById('btn-reopen').addEventListener('click', function() {
+    document.getElementById('btn-reopen').addEventListener('click', function () {
       if (consentPopup) {
         consentPopup.open();
         logEvent('Banner opened manually');
       }
     });
 
-    document.getElementById('btn-modal').addEventListener('click', function() {
+    document.getElementById('btn-modal').addEventListener('click', function () {
       if (consentPopup) {
         consentPopup.openPreferences({
           privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
-          onClose: function() {
+          onClose: function () {
             logEvent('Preferences modal closed');
           }
         });
       } else {
         var modal = cookieconsent.createCookieModal({
           privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
-          onClose: function() {
+          onClose: function () {
             logEvent('Preferences modal closed');
           }
         });
@@ -262,7 +268,7 @@
       logEvent('Preferences modal opened');
     });
 
-    document.getElementById('btn-clear').addEventListener('click', function() {
+    document.getElementById('btn-clear').addEventListener('click', function () {
       if (consentPopup) {
         consentPopup.clearStatus();
       }

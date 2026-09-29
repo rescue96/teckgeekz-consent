@@ -78,14 +78,14 @@ Add the stylesheet to your `<head>` and the script before your closing `</body>`
 
 #### Via jsDelivr (Recommended)
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
 ```
 
 #### Via unpkg
 ```html
-<link rel="stylesheet" href="https://unpkg.com/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" />
-<script src="https://unpkg.com/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/teckgeekz-consent@3.1.5/build/cookieconsent.min.css" />
+<script src="https://unpkg.com/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
 ```
 
 ---
@@ -229,7 +229,7 @@ window.cookieconsent.initialise({
 <head>
   <!-- Initialize default consent state early (wait_for_update: 500ms) -->
   <!-- Via jsDelivr CDN (or local node_modules / build path) -->
-  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
   <script>
     // Sets ad_storage, analytics_storage, ad_user_data, and ad_personalization to 'denied'
     window.cookieconsent.initGoogleConsentMode({
@@ -376,8 +376,8 @@ The `teckgeekz` theme provides a sleek, dark-mode glassmorphic design paired wit
 
 ```html
 <!-- Via jsDelivr CDN (or local build path) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css">
-<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.css">
+<script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
 
 <script>
   window.cookieconsent.initialise({

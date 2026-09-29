@@ -9,160 +9,165 @@
   <title>Demo 7 - JavaScript API</title>
 
   <link href="examples/style.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.css" rel="stylesheet">
 
-  <body class="example7" role="document">
+<body class="example7" role="document">
 
-    <div class="demo-topbar">
-      <div class="brand">teckgeekz-<span>consent</span></div>
-      <div>
-        <a href="examples/index.html">&larr; Back to All Demos</a> &bull;
-        <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>
-      </div>
+  <div class="demo-topbar">
+    <div class="brand">teckgeekz-<span>consent</span></div>
+    <div>
+      <a href="examples/index.html">&larr; Back to All Demos</a> &bull;
+      <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>
     </div>
+  </div>
 
-    <div class="center-outer fit">
-      <div class="center-inner">
-        <div class="example-window" role="main" style="padding-top: 60px;">
+  <div class="center-outer fit">
+    <div class="center-inner">
+      <div class="example-window" role="main" style="padding-top: 60px;">
 
-          <h1>
-            <span>Demo 7</span> JavaScript API</h1>
+        <h1>
+          <span>Demo 7</span> JavaScript API
+        </h1>
 
-          <p>
-            Developers can programmatically control
-            <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a> via JavaScript methods and lifecycle events:
-          </p>
+        <p>
+          Developers can programmatically control
+          <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a> via JavaScript
+          methods and lifecycle events:
+        </p>
 
-          <h3>Popup Controls</h3>
+        <h3>Popup Controls</h3>
 
-          <div class="btn-group">
-            <button type="button" class="btn" id="btn-open">Open</button>
-            <button type="button" class="btn" id="btn-close">Close</button>
-            <button type="button" class="btn" id="btn-destroy">Destroy</button>
-            <button type="button" class="btn" id="btn-open-pref" style="border-color: #38bdf8; color: #38bdf8;">openPreferences()</button>
-          </div>
-
-          <h3>Status &amp; Verification</h3>
-
-          <div class="btn-group">
-            <button type="button" class="btn" id="btn-dismissCookie">Dismiss</button>
-            <button type="button" class="btn" id="btn-allowCookie">Allow</button>
-            <button type="button" class="btn" id="btn-denyCookie">Deny</button>
-            <button type="button" class="btn" id="btn-revokeChoice">Revoke</button>
-            <button type="button" class="btn" id="btn-hasConsented">hasConsented()</button>
-            <button type="button" class="btn" id="btn-hasAnswered">hasAnswered()</button>
-          </div>
-
-          <h3>Console Log</h3>
-
-          <pre id="console"></pre>
-
-          <a href="examples/example-6-location.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
-          <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-next" title="Next demo: Google Consent Mode">&#9654;</a>
-
+        <div class="btn-group">
+          <button type="button" class="btn" id="btn-open">Open</button>
+          <button type="button" class="btn" id="btn-close">Close</button>
+          <button type="button" class="btn" id="btn-destroy">Destroy</button>
+          <button type="button" class="btn" id="btn-open-pref"
+            style="border-color: #38bdf8; color: #38bdf8;">openPreferences()</button>
         </div>
+
+        <h3>Status &amp; Verification</h3>
+
+        <div class="btn-group">
+          <button type="button" class="btn" id="btn-dismissCookie">Dismiss</button>
+          <button type="button" class="btn" id="btn-allowCookie">Allow</button>
+          <button type="button" class="btn" id="btn-denyCookie">Deny</button>
+          <button type="button" class="btn" id="btn-revokeChoice">Revoke</button>
+          <button type="button" class="btn" id="btn-hasConsented">hasConsented()</button>
+          <button type="button" class="btn" id="btn-hasAnswered">hasAnswered()</button>
+        </div>
+
+        <h3>Console Log</h3>
+
+        <pre id="console"></pre>
+
+        <a href="examples/example-6-location.html" class="page-switcher page-switcher-prev"
+          title="Previous demo">&#9664;</a>
+        <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-next"
+          title="Next demo: Google Consent Mode">&#9654;</a>
+
       </div>
     </div>
+  </div>
 
-    <script src="examples/script.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
-    <script>
+  <script src="examples/script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
+  <script>
 
-      var h = document.getElementById('console');
+    var h = document.getElementById('console');
 
-      var log = function (message) {
-        h.innerHTML += timeStamp() + message + "<br>";
-        h.scrollTop = h.scrollHeight;
-      }
+    var log = function (message) {
+      h.innerHTML += timeStamp() + message + "<br>";
+      h.scrollTop = h.scrollHeight;
+    }
 
-      var p;
-      cookieconsent.initialise({
-        type: 'opt-out',
-        palette: {
-          "popup": { "background": "#eaf7f7", "text": "#5c7291" },
-          "button": { "background": "#56cbdb", "text": "#ffffff" },
-        },
-        content: {
-          href: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
-        },
-        onPopupOpen: function () {
-          log('<em>onPopupOpen()</em> called');
-        },
-        onPopupClose: function () {
-          log('<em>onPopupClose()</em> called');
-        },
-        onInitialise: function (status) {
-          log('<em>onInitialise()</em> called with status <em>' + status + '</em>');
-        },
-        onStatusChange: function (status) {
-          log('<em>onStatusChange()</em> called with status <em>' + status + '</em>');
-        },
-        onRevokeChoice: function () {
-          log('<em>onRevokeChoice()</em> called');
-        },
-        onNoCookieLaw: function (countryCode, country) {
-          log('<em>onNoCookieLaw()</em> called with countryCode <em>' + countryCode + '</em>');
-        },
-      }, function (popup) {
-        p = popup;
-      }, function (err) {
-        console.error(err);
-      });
+    var p;
+    cookieconsent.initialise({
+      type: 'opt-out',
+      palette: {
+        "popup": { "background": "#eaf7f7", "text": "#5c7291" },
+        "button": { "background": "#56cbdb", "text": "#ffffff" },
+      },
+      content: {
+        href: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
+      },
+      onPopupOpen: function () {
+        log('<em>onPopupOpen()</em> called');
+      },
+      onPopupClose: function () {
+        log('<em>onPopupClose()</em> called');
+      },
+      onInitialise: function (status) {
+        log('<em>onInitialise()</em> called with status <em>' + status + '</em>');
+      },
+      onStatusChange: function (status) {
+        log('<em>onStatusChange()</em> called with status <em>' + status + '</em>');
+      },
+      onRevokeChoice: function () {
+        log('<em>onRevokeChoice()</em> called');
+      },
+      onNoCookieLaw: function (countryCode, country) {
+        log('<em>onNoCookieLaw()</em> called with countryCode <em>' + countryCode + '</em>');
+      },
+    }, function (popup) {
+      p = popup;
+    }, function (err) {
+      console.error(err);
+    });
 
-      document.getElementById('btn-dismissCookie').onclick = function (e) {
-        log("Calling <em>setStatus(cookieconsent.status.dismiss)</em>");
-        p.setStatus(cookieconsent.status.dismiss);
-        log("Calling <em>close()</em>");
-        p.close();
-      };
+    document.getElementById('btn-dismissCookie').onclick = function (e) {
+      log("Calling <em>setStatus(cookieconsent.status.dismiss)</em>");
+      p.setStatus(cookieconsent.status.dismiss);
+      log("Calling <em>close()</em>");
+      p.close();
+    };
 
-      document.getElementById('btn-allowCookie').onclick = function (e) {
-        log("Calling <em>setStatus(cookieconsent.status.allow)</em>");
-        p.setStatus(cookieconsent.status.allow);
-        log("Calling <em>close()</em>");
-        p.close();
-      };
+    document.getElementById('btn-allowCookie').onclick = function (e) {
+      log("Calling <em>setStatus(cookieconsent.status.allow)</em>");
+      p.setStatus(cookieconsent.status.allow);
+      log("Calling <em>close()</em>");
+      p.close();
+    };
 
-      document.getElementById('btn-denyCookie').onclick = function (e) {
-        log("Calling <em>setStatus(cookieconsent.status.deny)</em>");
-        p.setStatus(cookieconsent.status.deny);
-        log("Calling <em>close()</em>");
-        p.close();
-      };
+    document.getElementById('btn-denyCookie').onclick = function (e) {
+      log("Calling <em>setStatus(cookieconsent.status.deny)</em>");
+      p.setStatus(cookieconsent.status.deny);
+      log("Calling <em>close()</em>");
+      p.close();
+    };
 
-      document.getElementById('btn-revokeChoice').onclick = function (e) {
-        log("Calling <em>revokeChoice()</em>");
-        p.revokeChoice();
+    document.getElementById('btn-revokeChoice').onclick = function (e) {
+      log("Calling <em>revokeChoice()</em>");
+      p.revokeChoice();
 
-      };
+    };
 
-      document.getElementById('btn-open').onclick = function (e) {
-        log("Calling <em>open()</em>");
-        p.open();
-      };
+    document.getElementById('btn-open').onclick = function (e) {
+      log("Calling <em>open()</em>");
+      p.open();
+    };
 
-      document.getElementById('btn-close').onclick = function (e) {
-        log("Calling <em>close()</em>");
-        p.close();
-      };
+    document.getElementById('btn-close').onclick = function (e) {
+      log("Calling <em>close()</em>");
+      p.close();
+    };
 
-      document.getElementById('btn-open-pref').onclick = function (e) {
-        log("Calling <em>openPreferences()</em>");
-        p.openPreferences();
-      };
+    document.getElementById('btn-open-pref').onclick = function (e) {
+      log("Calling <em>openPreferences()</em>");
+      p.openPreferences();
+    };
 
-      document.getElementById('btn-destroy').onclick = function (e) {
-        log("Calling <em>destroy()</em>");
-        p.destroy();
-        log("<span class='alert'>Cookie Consent has been destroyed and cannot be used again. Reload the page.</span>");
-      };
+    document.getElementById('btn-destroy').onclick = function (e) {
+      log("Calling <em>destroy()</em>");
+      p.destroy();
+      log("<span class='alert'>Cookie Consent has been destroyed and cannot be used again. Reload the page.</span>");
+    };
 
-      document.getElementById('btn-hasConsented').onclick = function (e) {
-        log("Calling <em>hasConsented()</em>: <strong>" + p.hasConsented() + "</strong>");
-      };
+    document.getElementById('btn-hasConsented').onclick = function (e) {
+      log("Calling <em>hasConsented()</em>: <strong>" + p.hasConsented() + "</strong>");
+    };
 
-      document.getElementById('btn-hasAnswered').onclick = function (e) {
-        log("Calling <em>hasAnswered()</em>: <strong>" + p.hasAnswered() + "</strong> (status: '" + p.getStatus() + "')");
-      };
+    document.getElementById('btn-hasAnswered').onclick = function (e) {
+      log("Calling <em>hasAnswered()</em>: <strong>" + p.hasAnswered() + "</strong> (status: '" + p.getStatus() + "')");
+    };
 
-    </script>
+  </script>

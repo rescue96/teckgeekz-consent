@@ -9,7 +9,7 @@
   <title>Demo 8 - Google Consent Mode v2 & GTM | teckgeekz-consent</title>
 
   <link href="examples/style.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.css" rel="stylesheet">
 
   <!-- Step 1: Initialize Google Consent Mode v2 default state BEFORE any tags load -->
   <script>
@@ -44,14 +44,17 @@
       <div class="example-window" role="main" style="padding-top: 60px;">
 
         <h1>
-          <span>Demo 8</span> Google Consent Mode v2 &amp; GTM</h1>
+          <span>Demo 8</span> Google Consent Mode v2 &amp; GTM
+        </h1>
 
         <p>
-          Integrate <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a> directly with Google Consent Mode v2 and Google Tag Manager.
+          Integrate <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a>
+          directly with Google Consent Mode v2 and Google Tag Manager.
         </p>
 
         <p style="font-size: 15px; opacity: 0.85; max-width: 600px; margin: 0 auto 20px;">
-          Accepting or declining cookies below updates the Google consent signals and pushes an event into <code>window.dataLayer</code> in real-time.
+          Accepting or declining cookies below updates the Google consent signals and pushes an event into
+          <code>window.dataLayer</code> in real-time.
         </p>
 
         <div class="btn-group">
@@ -62,15 +65,17 @@
         <h3>Live dataLayer Log</h3>
         <pre id="console" style="max-height: 220px;"></pre>
 
-        <a href="examples/example-7-javascript-api.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
-        <a href="examples/example-9-teckgeekz-theme.html" class="page-switcher page-switcher-next" title="Next demo: Teckgeekz Theme">&#9654;</a>
+        <a href="examples/example-7-javascript-api.html" class="page-switcher page-switcher-prev"
+          title="Previous demo">&#9664;</a>
+        <a href="examples/example-9-teckgeekz-theme.html" class="page-switcher page-switcher-next"
+          title="Next demo: Teckgeekz Theme">&#9654;</a>
 
       </div>
     </div>
   </div>
 
   <script src="examples/script.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.4/build/cookieconsent.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/teckgeekz-consent@3.1.5/build/cookieconsent.min.js"></script>
   <script>
     var logEl = document.getElementById('console');
 
@@ -89,7 +94,7 @@
 
     // Intercept dataLayer.push to log native package updates in real time
     var origPush = window.dataLayer.push;
-    window.dataLayer.push = function() {
+    window.dataLayer.push = function () {
       var res = origPush.apply(window.dataLayer, arguments);
       for (var i = 0; i < arguments.length; i++) {
         var item = arguments[i];
@@ -145,4 +150,5 @@
   </script>
 
 </body>
+
 </html>
