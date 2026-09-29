@@ -340,3 +340,74 @@ test('createCookieModal and popup.openPreferences support teckgeekz granular con
   assert.ok(openedModal, 'popup.openPreferences returned modal controller');
 });
 
+test('Google Consent Mode v2 payload mapping and API utilities', () => {
+  setupMockDom();
+  delete require.cache[require.resolve('../src/cookieconsent.js')];
+  const cookieconsent = require('../src/cookieconsent.js');
+
+  // Test getGoogleConsentPayload with boolean
+  const grantedPayload = cookieconsent.getGoogleConsentPayload(true);
+  assert.strictEqual(grantedPayload.analytics_storage, 'granted');
+  assert.strictEqual(grantedPayload.ad_storage, 'granted');
+  assert.strictEqual(grantedPayload.ad_user_data, 'granted');
+  assert.strictEqual(grantedPayload.ad_personalization, 'granted');
+
+  const deniedPayload = cookieconsent.getGoogleConsentPayload(false);
+  assert.strictEqual(deniedPayload.analytics_storage, 'denied');
+  assert.strictEqual(deniedPayload.ad_storage, 'denied');
+  assert.strictEqual(deniedPayload.ad_user_data, 'denied');
+  assert.strictEqual(deniedPayload.ad_personalization, 'denied');
+
+  // Test with category object (analytics only)
+  const mixedPayload = cookieconsent.getGoogleConsentPayload({ analytics: true, marketing: false });
+  assert.strictEqual(mixedPayload.analytics_storage, 'granted');
+  assert.strictEqual(mixedPayload.ad_storage, 'denied');
+  assert.strictEqual(mixedPayload.ad_user_data, 'denied');
+  assert.strictEqual(mixedPayload.ad_personalization, 'denied');
+
+  // Test initGoogleConsentMode
+  const defaultPayload = cookieconsent.initGoogleConsentMode({ defaultState: 'denied', waitForUpdate: 500 });
+  assert.ok(defaultPayload);
+  assert.strictEqual(defaultPayload.wait_for_update, 500);
+  assert.strictEqual(defaultPayload.analytics_storage, 'denied');
+  assert.ok(Array.isArray(global.window.dataLayer));
+  assert.strictEqual(typeof global.window.gtag, 'function');
+
+  // Test updateGoogleConsent pushes both gtag call and dataLayer event
+  cookieconsent.updateGoogleConsent({ analytics: true, marketing: true });
+  const lastEvent = global.window.dataLayer[global.window.dataLayer.length - 1];
+  assert.strictEqual(lastEvent.event, 'cookie_consent_update');
+  assert.strictEqual(lastEvent.consent_analytics, 'granted');
+  assert.strictEqual(lastEvent.consent_ad_storage, 'granted');
+  assert.strictEqual(lastEvent.consent_ad_user_data, 'granted');
+  assert.strictEqual(lastEvent.consent_ad_personalization, 'granted');
+});
+
+test('CookiePopup automatically updates Google Consent Mode v2 when enabled', () => {
+  setupMockDom();
+  delete require.cache[require.resolve('../src/cookieconsent.js')];
+  const cookieconsent = require('../src/cookieconsent.js');
+
+  const popup = new cookieconsent.Popup({
+    type: 'opt-in',
+    googleConsentMode: true
+  });
+
+  // User allows cookies
+  popup.setStatus(cookieconsent.status.allow);
+  let lastEvent = global.window.dataLayer[global.window.dataLayer.length - 1];
+  assert.strictEqual(lastEvent.event, 'cookie_consent_update');
+  assert.strictEqual(lastEvent.consent_status, 'allow');
+  assert.strictEqual(lastEvent.consent_analytics, 'granted');
+  assert.strictEqual(lastEvent.consent_ad_storage, 'granted');
+
+  // User revokes choice
+  popup.revokeChoice(true);
+  lastEvent = global.window.dataLayer[global.window.dataLayer.length - 1];
+  assert.strictEqual(lastEvent.event, 'cookie_consent_update');
+  assert.strictEqual(lastEvent.consent_status, 'deny');
+  assert.strictEqual(lastEvent.consent_analytics, 'denied');
+  assert.strictEqual(lastEvent.consent_ad_storage, 'denied');
+});
+
+

@@ -28,6 +28,7 @@ Maintained and enhanced by **[Teckgeekz](https://teckgeekz.com)**. This project 
   - [Initialization](#initialization)
   - [Popup Instance Methods](#popup-instance-methods)
   - [Teckgeekz Cookie Preferences Modal API](#teckgeekz-cookie-preferences-modal-api)
+  - [Google Consent Mode v2 API](#google-consent-mode-v2-api)
   - [Status Constants](#status-constants)
 - [Configuration Options](#configuration-options)
   - [General Settings](#general-settings)
@@ -183,68 +184,64 @@ window.cookieconsent.initialise({
 
 ---
 
-### 2. Opt-In Mode (GDPR / Google Consent Mode v2)
-Requires users to explicitly opt in before cookies or tracking scripts can fire.
+### 2. Opt-In Mode with Native Google Consent Mode v2
+
+`teckgeekz-consent` provides **first-class, native support for Google Consent Mode v2**. When `googleConsentMode: true` is enabled, the package automatically manages:
+- All 4 required Google Consent Mode v2 signals: `analytics_storage`, `ad_storage`, `ad_user_data`, and `ad_personalization`.
+- Real-time `gtag('consent', 'update', ...)` calls on user action (`Accept All`, `Decline`, or `Revoke`).
+- Automatic dispatch of standardized `cookie_consent_update` events on `window.dataLayer` so Google Tag Manager (GTM) triggers can fire tags dynamically.
+
+#### Step A: Initialize Default Consent in `<head>` (Before Google / GTM tags load)
+
+```html
+<head>
+  <!-- Initialize default consent state early (wait_for_update: 500ms) -->
+  <script src="node_modules/teckgeekz-consent/build/cookieconsent.min.js"></script>
+  <script>
+    // Sets ad_storage, analytics_storage, ad_user_data, and ad_personalization to 'denied'
+    window.cookieconsent.initGoogleConsentMode({
+      defaultState: 'denied',
+      waitForUpdate: 500
+    });
+  </script>
+
+  <!-- Google Tag Manager / GA4 Container follows -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+</head>
+```
+
+#### Step B: Initialize the Banner with Zero-Boilerplate Consent Mode Sync
 
 ```javascript
 window.cookieconsent.initialise({
   type: 'opt-in',
   position: 'bottom',
   revokable: true,
+  // Native Google Consent Mode v2 integration:
+  googleConsentMode: {
+    autoUpdate: true,                  // Automatically fires gtag updates on accept/deny/revoke
+    eventName: 'cookie_consent_update' // Pushes custom event to window.dataLayer
+  },
   palette: {
     popup: { background: '#0f172a', text: '#e2e8f0' },
-    button: { background: '#10b981', text: '#ffffff' }
+    button: { background: '#38bdf8', text: '#0f172a' }
   },
   content: {
-    message: 'We require your consent before setting non-essential cookies.',
+    message: 'We require your consent before setting analytics and advertising cookies.',
     allow: 'Accept All',
     deny: 'Decline',
     link: 'Cookie Policy',
     href: '/cookie-policy'
-  },
-  onInitialise: function (status) {
-    var type = this.options.type;
-    var didConsent = this.hasConsented();
-    if (type === 'opt-in' && didConsent) {
-      enableTracking();
-    }
-  },
-  onStatusChange: function (status, chosenBefore) {
-    var type = this.options.type;
-    var didConsent = this.hasConsented();
-    if (type === 'opt-in' && didConsent) {
-      enableTracking();
-    } else {
-      disableTracking();
-    }
-  },
-  onRevokeChoice: function () {
-    disableTracking();
   }
 });
-
-function enableTracking() {
-  // Update Google Consent Mode v2
-  if (typeof window.gtag === 'function') {
-    window.gtag('consent', 'update', {
-      'analytics_storage': 'granted',
-      'ad_storage': 'granted'
-    });
-  }
-  // Push custom event to GTM
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({ event: 'consent_granted' });
-}
-
-function disableTracking() {
-  if (typeof window.gtag === 'function') {
-    window.gtag('consent', 'update', {
-      'analytics_storage': 'denied',
-      'ad_storage': 'denied'
-    });
-  }
-}
 ```
+
+> [!TIP]
+> In Google Tag Manager, configure your GA4 and Google Ads tags to trigger on the Custom Event: **`cookie_consent_update`** when `consent_status = allow`.
 
 ---
 
@@ -437,6 +434,42 @@ modal.open();   // Opens the preferences modal and syncs current cookie states
 modal.close();  // Hides the preferences modal
 ```
 
+### Google Consent Mode v2 API
+
+The package exposes standalone utilities for configuring and updating Google Consent Mode v2 signals directly:
+
+#### `cookieconsent.initGoogleConsentMode(options)`
+Sets the `default` consent state for all 4 v2 signals. Call this early in `<head>` before Google/GTM tags load.
+
+```javascript
+window.cookieconsent.initGoogleConsentMode({
+  defaultState: 'denied',   // 'denied' | 'granted' (default: 'denied')
+  waitForUpdate: 500,       // wait_for_update timeout in ms (default: 500)
+  urlPassthrough: false,    // Optional Google Ads URL passthrough
+  adsDataRedaction: false   // Optional redaction of ad click identifiers
+});
+```
+
+#### `cookieconsent.updateGoogleConsent(consentOrCategories, options)`
+Updates Google Consent Mode v2 signals and automatically pushes an event to `window.dataLayer`.
+
+```javascript
+// Update all signals at once:
+window.cookieconsent.updateGoogleConsent('granted'); // or 'denied'
+
+// Or update granular categories:
+window.cookieconsent.updateGoogleConsent({
+  analytics: true,   // sets analytics_storage: 'granted'
+  marketing: false   // sets ad_storage, ad_user_data, and ad_personalization: 'denied'
+}, {
+  eventName: 'cookie_consent_update' // Pushes to window.dataLayer
+});
+```
+
+#### `cookieconsent.getGoogleConsentPayload(consentOrCategories)`
+Helper returning the normalized 4-signal v2 dictionary:
+`{ analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }`.
+
 ### Status Constants
 
 ```javascript
@@ -459,6 +492,7 @@ window.cookieconsent.status = {
 | `position` | `string` | `'bottom'` | Position: `'bottom'`, `'top'`, `'top-left'`, `'top-right'`, `'bottom-left'`, `'bottom-right'`. |
 | `theme` | `string` | `'block'` | Built-in theme: `'block'`, `'classic'`, `'edgeless'`, or `'teckgeekz'`. |
 | `layout` | `string` | `'basic'` | Layout template: `'basic'`, `'basic-close'`, `'basic-header'`. |
+| `googleConsentMode` | `boolean \| object` | `false` | First-class Google Consent Mode v2 integration. Automatically synchronizes all 4 v2 signals (`analytics_storage`, `ad_storage`, `ad_user_data`, `ad_personalization`) and pushes GTM `cookie_consent_update` events on accept/deny/revoke. |
 | `static` | `boolean` | `false` | If `true`, renders statically within page flow instead of fixed positioning. |
 | `autoOpen` | `boolean` | `true` | Whether to automatically show the banner when unhandled. |
 | `autoAttach` | `boolean` | `true` | Automatically appends element to `container`. |

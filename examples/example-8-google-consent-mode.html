@@ -75,22 +75,43 @@
     var logEl = document.getElementById('console');
 
     function logDataLayer(title, payload) {
-      logEl.innerHTML += timeStamp() + '<strong>' + title + '</strong>: ' + JSON.stringify(payload) + '<br>';
+      logEl.innerHTML += timeStamp() + '<strong>' + title + '</strong>: ' + (payload ? JSON.stringify(payload) : '') + '<br>';
       logEl.scrollTop = logEl.scrollHeight;
     }
 
-    logDataLayer('Initial Default Consent', {
+    logDataLayer('Google Consent Mode v2 Initialized', {
       ad_storage: 'denied',
       analytics_storage: 'denied',
       ad_user_data: 'denied',
-      ad_personalization: 'denied'
+      ad_personalization: 'denied',
+      wait_for_update: 500
     });
+
+    // Intercept dataLayer.push to log native package updates in real time
+    var origPush = window.dataLayer.push;
+    window.dataLayer.push = function() {
+      var res = origPush.apply(window.dataLayer, arguments);
+      for (var i = 0; i < arguments.length; i++) {
+        var item = arguments[i];
+        if (item && item[0] === 'consent') {
+          logDataLayer('gtag("consent", "' + item[1] + '")', item[2]);
+        } else if (item && item.event) {
+          logDataLayer('dataLayer event: ' + item.event, item);
+        }
+      }
+      return res;
+    };
 
     var consentPopup;
 
+    // Native Package-level Google Consent Mode v2 Integration (Zero Boilerplate!)
     cookieconsent.initialise({
       type: 'opt-in',
       position: 'bottom',
+      googleConsentMode: {
+        autoUpdate: true,      // Automatically fires gtag('consent', 'update') on accept/decline
+        eventName: 'cookie_consent_update' // Pushes standardized GTM event
+      },
       palette: {
         popup: { background: "#0f172a", text: "#e2e8f0" },
         button: { background: "#38bdf8", text: "#0f172a" }
@@ -101,49 +122,10 @@
         deny: "Decline",
         link: "Privacy Policy",
         href: "https://teckgeekz.com"
-      },
-      onInitialise: function (status) {
-        logDataLayer('onInitialise()', { status: status, hasConsented: this.hasConsented() });
-        if (this.hasConsented()) {
-          updateGoogleConsent('granted', 'granted');
-        }
-      },
-      onStatusChange: function (status) {
-        logDataLayer('onStatusChange()', { status: status, hasConsented: this.hasConsented() });
-        if (this.hasConsented()) {
-          updateGoogleConsent('granted', 'granted');
-        } else {
-          updateGoogleConsent('denied', 'denied');
-        }
-      },
-      onRevokeChoice: function () {
-        logDataLayer('onRevokeChoice()', { status: 'revoked' });
-        updateGoogleConsent('denied', 'denied');
       }
     }, function (popup) {
       consentPopup = popup;
     });
-
-    function updateGoogleConsent(analyticsState, marketingState) {
-      gtag('consent', 'update', {
-        'analytics_storage': analyticsState,
-        'ad_storage': marketingState,
-        'ad_user_data': marketingState,
-        'ad_personalization': marketingState
-      });
-
-      window.dataLayer.push({
-        event: 'cookie_consent_update',
-        consent_analytics: analyticsState,
-        consent_marketing: marketingState
-      });
-
-      logDataLayer('gtag(consent, update)', {
-        analytics_storage: analyticsState,
-        ad_storage: marketingState,
-        event: 'cookie_consent_update'
-      });
-    }
 
     document.getElementById('btn-reopen').onclick = function () {
       if (consentPopup) {
@@ -154,7 +136,8 @@
     document.getElementById('btn-clear').onclick = function () {
       if (consentPopup) {
         consentPopup.clearStatus();
-        updateGoogleConsent('denied', 'denied');
+        // Demonstrate standalone package utility updateGoogleConsent:
+        cookieconsent.updateGoogleConsent('denied');
         consentPopup.open();
         logDataLayer('Status Cleared', { cookie: 'deleted' });
       }

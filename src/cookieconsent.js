@@ -419,7 +419,11 @@
       // If this is defined, then it is used as the inner html instead of layout. This allows for ultimate customisation.
       // Be sure to use the classes `cc-btn` and `cc-allow`, `cc-deny` or `cc-dismiss`. They enable the app to register click
       // handlers. You can use other pre-existing classes too. See `src/styles` folder.
-      overrideHTML: null
+      overrideHTML: null,
+
+      // Google Consent Mode v2 configuration: false, true, or an options object
+      // Enables automatic integration with Google Consent Mode v2 and Google Tag Manager dataLayer
+      googleConsentMode: false
     };
 
     function CookiePopup() {
@@ -443,6 +447,23 @@
       if (checkCallbackHooks.call(this)) {
         // user has already answered
         this.options.enabled = false;
+      }
+
+      // Google Consent Mode v2 auto-handling
+      if (this.options.googleConsentMode) {
+        var gcm = typeof this.options.googleConsentMode === 'object'
+          ? this.options.googleConsentMode
+          : {};
+
+        if (gcm.autoDefault !== false) {
+          if (this.hasConsented()) {
+            cc.updateGoogleConsent('granted', gcm);
+          } else if (this.getStatus() === cc.status.deny) {
+            cc.updateGoogleConsent('denied', gcm);
+          } else {
+            cc.initGoogleConsentMode(gcm);
+          }
+        }
       }
 
       // apply blacklist / whitelist
@@ -686,6 +707,13 @@
       this.options.enabled = true;
       this.clearStatus();
 
+      if (this.options.googleConsentMode) {
+        var gcm = typeof this.options.googleConsentMode === 'object'
+          ? this.options.googleConsentMode
+          : {};
+        cc.updateGoogleConsent('denied', gcm);
+      }
+
       this.options.onRevokeChoice.call(this);
 
       if (!preventOpen) {
@@ -730,8 +758,22 @@
           c.sameSite
         );
 
+        if (this.options.googleConsentMode) {
+          var gcm = typeof this.options.googleConsentMode === 'object'
+            ? this.options.googleConsentMode
+            : {};
+          var isAllow = (status === cc.status.allow || status === cc.status.dismiss);
+          cc.updateGoogleConsent(isAllow ? 'granted' : 'denied', gcm);
+        }
+
         this.options.onStatusChange.call(this, status, chosenBefore);
       } else {
+        if (this.options.googleConsentMode) {
+          var gcm = typeof this.options.googleConsentMode === 'object'
+            ? this.options.googleConsentMode
+            : {};
+          cc.updateGoogleConsent('denied', gcm);
+        }
         this.clearStatus();
       }
     };
@@ -1921,6 +1963,179 @@
     complete({});
   };
 
+  /**
+   * Translates a boolean, string, or category map into Google Consent Mode v2 signals.
+   * Google Consent Mode v2 mandatory signals:
+   * - analytics_storage
+   * - ad_storage
+   * - ad_user_data (v2)
+   * - ad_personalization (v2)
+   */
+  cc.getGoogleConsentPayload = function(consentOrCategories) {
+    var isGranted = function(val) {
+      return val === true || val === 'granted' || val === 'allow';
+    };
+
+    if (
+      typeof consentOrCategories === 'boolean' ||
+      typeof consentOrCategories === 'string'
+    ) {
+      var state = isGranted(consentOrCategories) ? 'granted' : 'denied';
+      return {
+        analytics_storage: state,
+        ad_storage: state,
+        ad_user_data: state,
+        ad_personalization: state
+      };
+    }
+
+    if (util.isPlainObject(consentOrCategories)) {
+      var analyticsGranted = isGranted(
+        consentOrCategories.analytics ||
+          consentOrCategories.analytics_storage
+      );
+      var adGranted = isGranted(
+        consentOrCategories.marketing ||
+          consentOrCategories.ad_storage
+      );
+      var userDataGranted =
+        consentOrCategories.ad_user_data !== undefined
+          ? isGranted(consentOrCategories.ad_user_data)
+          : adGranted;
+      var personalizationGranted =
+        consentOrCategories.ad_personalization !== undefined
+          ? isGranted(consentOrCategories.ad_personalization)
+          : adGranted;
+
+      var payload = {
+        analytics_storage: analyticsGranted ? 'granted' : 'denied',
+        ad_storage: adGranted ? 'granted' : 'denied',
+        ad_user_data: userDataGranted ? 'granted' : 'denied',
+        ad_personalization: personalizationGranted ? 'granted' : 'denied'
+      };
+
+      if (
+        consentOrCategories.functionality !== undefined ||
+        consentOrCategories.functionality_storage !== undefined
+      ) {
+        payload.functionality_storage = isGranted(
+          consentOrCategories.functionality ||
+            consentOrCategories.functionality_storage
+        )
+          ? 'granted'
+          : 'denied';
+      }
+      if (
+        consentOrCategories.personalization !== undefined ||
+        consentOrCategories.personalization_storage !== undefined
+      ) {
+        payload.personalization_storage = isGranted(
+          consentOrCategories.personalization ||
+            consentOrCategories.personalization_storage
+        )
+          ? 'granted'
+          : 'denied';
+      }
+      if (
+        consentOrCategories.security !== undefined ||
+        consentOrCategories.security_storage !== undefined
+      ) {
+        payload.security_storage = isGranted(
+          consentOrCategories.security ||
+            consentOrCategories.security_storage
+        )
+          ? 'granted'
+          : 'denied';
+      }
+
+      return payload;
+    }
+
+    return {
+      analytics_storage: 'denied',
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied'
+    };
+  };
+
+  /**
+   * Initializes Google Consent Mode v2 default state.
+   * Can be called in <head> or automatically by CookiePopup.
+   */
+  cc.initGoogleConsentMode = function(options) {
+    if (typeof window === 'undefined') return;
+
+    options = options || {};
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function() {
+        window.dataLayer.push(arguments);
+      };
+    }
+
+    var defaultState = options.defaultState || options.default || 'denied';
+    var payload = cc.getGoogleConsentPayload(
+      options.categories || defaultState
+    );
+
+    var waitForUpdate =
+      typeof options.waitForUpdate === 'number'
+        ? options.waitForUpdate
+        : typeof options.wait_for_update === 'number'
+        ? options.wait_for_update
+        : 500;
+
+    if (waitForUpdate > 0) {
+      payload.wait_for_update = waitForUpdate;
+    }
+    if (options.urlPassthrough || options.url_passthrough) {
+      payload.url_passthrough = true;
+    }
+    if (options.adsDataRedaction || options.ads_data_redaction) {
+      payload.ads_data_redaction = true;
+    }
+
+    window.gtag('consent', 'default', payload);
+    return payload;
+  };
+
+  /**
+   * Updates Google Consent Mode v2 signals and pushes a standardized event to window.dataLayer.
+   */
+  cc.updateGoogleConsent = function(consentOrCategories, options) {
+    if (typeof window === 'undefined') return;
+
+    options = options || {};
+    var payload = cc.getGoogleConsentPayload(consentOrCategories);
+
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function() {
+        window.dataLayer.push(arguments);
+      };
+    }
+
+    window.gtag('consent', 'update', payload);
+
+    if (options.pushEvent !== false) {
+      var eventName = options.eventName || 'cookie_consent_update';
+      var isAllowed =
+        payload.analytics_storage === 'granted' ||
+        payload.ad_storage === 'granted';
+      window.dataLayer.push({
+        event: eventName,
+        consent_status: isAllowed ? 'allow' : 'deny',
+        consent_analytics: payload.analytics_storage,
+        consent_ad_storage: payload.ad_storage,
+        consent_ad_user_data: payload.ad_user_data,
+        consent_ad_personalization: payload.ad_personalization
+      });
+    }
+
+    return payload;
+  };
+
   // Creates and manages the Teckgeekz Granular Cookie Preferences Modal
   cc.createCookieModal = function(options) {
     if (typeof document === 'undefined') return null;
@@ -1972,23 +2187,13 @@
         window.updateGtagConsent(analyticsVal, marketingVal);
         return;
       }
-      if (typeof window.gtag === 'function') {
-        window.gtag('consent', 'update', {
-          analytics_storage: analyticsVal,
-          ad_storage: marketingVal,
-          ad_user_data: marketingVal,
-          ad_personalization: marketingVal
-        });
-      }
-      if (window.dataLayer && Array.isArray(window.dataLayer)) {
-        window.dataLayer.push({
-          event: 'consent_update',
-          analytics_storage: analyticsVal,
-          ad_storage: marketingVal,
-          ad_user_data: marketingVal,
-          ad_personalization: marketingVal
-        });
-      }
+      cc.updateGoogleConsent(
+        {
+          analytics: analyticsVal === 'granted',
+          marketing: marketingVal === 'granted'
+        },
+        options.googleConsentMode || {}
+      );
     };
 
     if (!existingModal) {
