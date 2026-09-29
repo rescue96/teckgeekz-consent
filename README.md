@@ -1,12 +1,13 @@
 # teckgeekz-consent
 
 [![npm version](https://img.shields.io/badge/version-3.1.2-blue.svg)](https://github.com/rescue96/teckgeekz-consent)
+[![Maintained by: Teckgeekz](https://img.shields.io/badge/Maintained%20by-Teckgeekz-0284c7.svg)](https://teckgeekz.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./licence)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/rescue96/teckgeekz-consent/pulls)
 
 A lightweight, accessible, zero-dependency JavaScript plugin for alerting users about cookie usage and managing privacy compliance on modern websites.
 
-This project is a maintained fork of [Osano Cookie Consent](https://github.com/osano/cookieconsent) (originally developed by Silktide / Insites), updated with modernized tooling, improved accessibility, security-conscious defaults, and enhanced compatibility for modern web frameworks.
+Maintained and enhanced by **[Teckgeekz](https://teckgeekz.com)**. This project is a maintained fork of [Osano Cookie Consent](https://github.com/osano/cookieconsent) (originally developed by Silktide / Insites), modernized with robust tooling, full keyboard and ARIA accessibility, Google Consent Mode v2 support, and zero-leak lifecycle management for modern web frameworks.
 
 ---
 
@@ -16,6 +17,7 @@ This project is a maintained fork of [Osano Cookie Consent](https://github.com/o
 - [Features](#features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Interactive Examples Suite](#interactive-examples-suite)
 - [Compliance Modes & Recipes](#compliance-modes--recipes)
   - [1. Informational Banner (Default)](#1-informational-banner-default)
   - [2. Opt-In Mode (GDPR / Google Consent Mode v2)](#2-opt-in-mode-gdpr--google-consent-mode-v2)
@@ -33,9 +35,9 @@ This project is a maintained fork of [Osano Cookie Consent](https://github.com/o
   - [Lifecycle Callbacks](#lifecycle-callbacks)
   - [Location & Regional Law](#location--regional-law)
 - [CSS Classes & Custom Styling](#css-classes--custom-styling)
-- [Development & Building](#development--building)
-- [Changelog](#changelog)
-- [License & Acknowledgements](#license--acknowledgements)
+- [Development & Testing](#development--testing)
+- [About Teckgeekz & Acknowledgements](#about-teckgeekz--acknowledgements)
+- [License](#license)
 
 ---
 
@@ -117,6 +119,39 @@ Initialize the banner once the DOM is ready:
 </body>
 </html>
 ```
+
+---
+
+## Interactive Examples Suite
+
+The repository includes a complete interactive test and demonstration suite located in the [`examples/`](./examples) directory. It walks through every compliance scenario, styling option, and JavaScript integration step-by-step.
+
+### Running Examples Locally
+
+To launch the interactive demos in your browser:
+
+```bash
+# Serve the repository root via any static server, e.g.:
+npx serve .
+# Or with Python:
+python -m http.server 8080
+```
+
+Then navigate to: **`http://localhost:3000/examples/`** (or port 8080) to access the Master Showcase.
+
+### Demo Directory Breakdown
+
+| Demo | File | Implementation Step & Scenario |
+| :--- | :--- | :--- |
+| **Index** | [`examples/index.html`](./examples/index.html) | **Master Showcase & Guide**: Complete overview with direct links to all interactive demos. |
+| **Demo 1** | [`examples/example-1-themes.html`](./examples/example-1-themes.html) | **Built-in Themes & Palettes**: Live switcher testing Honeybee, Blurple, Mono, Nuclear, Cosmo, Neon, and Corporate themes. |
+| **Demo 2** | [`examples/example-2-custom-theme.html`](./examples/example-2-custom-theme.html) | **Custom CSS Overrides**: Shows how to target `.cc-window`, `.cc-btn`, and `.cc-message` with custom stylesheets. |
+| **Demo 3** | [`examples/example-3-informational.html`](./examples/example-3-informational.html) | **Informational Mode (`info`)**: The simplest compliance level with a single acknowledgement button. |
+| **Demo 4** | [`examples/example-4-opt-out.html`](./examples/example-4-opt-out.html) | **Opt-Out Mode (`opt-out`)**: Implied consent where cookies are allowed unless user declines; includes revoke tab. |
+| **Demo 5** | [`examples/example-5-opt-in.html`](./examples/example-5-opt-in.html) | **Opt-In Mode (`opt-in`)**: Explicit consent required before setting cookies; strict GDPR/ePrivacy compliant. |
+| **Demo 6** | [`examples/example-6-location.html`](./examples/example-6-location.html) | **Geolocation & Regional Law**: Automatically tests and demonstrates how cookie law varies by country (US, UK, DE, ES, BE, etc.). |
+| **Demo 7** | [`examples/example-7-javascript-api.html`](./examples/example-7-javascript-api.html) | **JavaScript API & Verification**: Interactive playground for `open()`, `close()`, `destroy()`, `setStatus()`, `hasConsented()`, and `hasAnswered()`. |
+| **Demo 8** | [`examples/example-8-google-consent-mode.html`](./examples/example-8-google-consent-mode.html) | **Google Consent Mode v2 & GTM**: Live integration updating Google Analytics & Ads consent signals and pushing dataLayer events. |
 
 ---
 
@@ -514,14 +549,52 @@ npm run build:release --tag=3.1.2
 
 ---
 
-## Changelog
+## Development & Testing
 
-See [`CHANGELOG.md`](./CHANGELOG.md) for version history and release notes.
+### Running Tests
+
+We provide automated unit and integration tests covering cookie handling, `SameSite` compliance, DOM creation, listener unbinding, keyboard accessibility, and custom cookie names:
+
+```bash
+npm test
+```
+
+### Building From Source
+
+```bash
+# Clean, compile, and minify JS and CSS into /build
+npm run build
+
+# Verify build output matches expected distribution
+npm run verify
+
+# Build release tag with automated version bump
+npm run build:release --tag=3.1.2
+```
 
 ---
 
-## License & Acknowledgements
+## About Teckgeekz & Acknowledgements
 
-This project is licensed under the [MIT License](./licence).
+### Maintained by Teckgeekz
 
-Originally authored by **Silktide Ltd** and maintained by **Osano**. Maintained and enhanced for modern web applications by **[Teckgeekz](http://teckgeekz.com)**.
+This project is maintained, optimized, and enhanced by **[Teckgeekz](https://teckgeekz.com)**.
+
+[Teckgeekz](https://teckgeekz.com) is a high-end digital agency specializing in:
+- **Performance Web Development**: Building ultra-fast, accessible, and compliant web applications using Next.js, React, and modern web architectures.
+- **Data Privacy & Analytics**: Implementing robust Google Consent Mode v2, Google Tag Manager, and server-side tracking solutions that respect user privacy and adhere to GDPR/CCPA regulations.
+- **Digital Marketing & Growth**: Strategic Search Engine Optimization (SEO), PPC campaign management, and conversion rate optimization (CRO).
+
+For business inquiries, custom implementation support, or technical consulting, visit **[teckgeekz.com](https://teckgeekz.com)**.
+
+### Upstream Acknowledgements
+
+- **Silktide Ltd**: Original author and creator of the open-source Cookie Consent library (v1 - v3).
+- **Osano**: Subsequent steward and maintainer of Cookie Consent v3.
+- All open-source contributors who have contributed fixes and translations over the years.
+
+---
+
+## License
+
+This project is open-source software licensed under the [MIT License](./licence). You are free to use, modify, distribute, and embed it in commercial and personal projects.

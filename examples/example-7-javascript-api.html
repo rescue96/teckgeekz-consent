@@ -13,19 +13,27 @@
 
   <body class="example7" role="document">
 
+    <div class="demo-topbar">
+      <div class="brand">teckgeekz-<span>consent</span></div>
+      <div>
+        <a href="examples/index.html">&larr; Back to All Demos</a> &bull;
+        <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>
+      </div>
+    </div>
+
     <div class="center-outer fit">
       <div class="center-inner">
-        <div class="example-window" role="main">
+        <div class="example-window" role="main" style="padding-top: 60px;">
 
           <h1>
             <span>Demo 7</span> JavaScript API</h1>
 
           <p>
-            Programmers can hook into our
-            <a href="http://cookieconsent.insites.com/documentation/javascript-api/">JavaScript API</a>. Fire events to see what happens:
+            Developers can programmatically control
+            <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a> via JavaScript methods and lifecycle events:
           </p>
 
-          <h3>Popup</h3>
+          <h3>Popup Controls</h3>
 
           <div class="btn-group">
             <button type="button" class="btn" id="btn-open">Open</button>
@@ -33,20 +41,23 @@
             <button type="button" class="btn" id="btn-destroy">Destroy</button>
           </div>
 
-          <h3>Set status</h3>
+          <h3>Status &amp; Verification</h3>
 
           <div class="btn-group">
-            <button type="button" class="btn" id="btn-dismissCookie">Dismissed</button>
-            <button type="button" class="btn" id="btn-allowCookie">Allowed</button>
-            <button type="button" class="btn" id="btn-denyCookie">Denied</button>
-            <button type="button" class="btn" id="btn-revokeChoice">Revoke choice</button>
+            <button type="button" class="btn" id="btn-dismissCookie">Dismiss</button>
+            <button type="button" class="btn" id="btn-allowCookie">Allow</button>
+            <button type="button" class="btn" id="btn-denyCookie">Deny</button>
+            <button type="button" class="btn" id="btn-revokeChoice">Revoke</button>
+            <button type="button" class="btn" id="btn-hasConsented">hasConsented()</button>
+            <button type="button" class="btn" id="btn-hasAnswered">hasAnswered()</button>
           </div>
 
-          <h3>Console</h3>
+          <h3>Console Log</h3>
 
           <pre id="console"></pre>
 
           <a href="examples/example-6-location.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
+          <a href="examples/example-8-google-consent-mode.html" class="page-switcher page-switcher-next" title="Next demo: Google Consent Mode">&#9654;</a>
 
         </div>
       </div>
@@ -135,6 +146,14 @@
         log("Calling <em>destroy()</em>");
         p.destroy();
         log("<span class='alert'>Cookie Consent has been destroyed and cannot be used again. Reload the page.</span>");
+      };
+
+      document.getElementById('btn-hasConsented').onclick = function (e) {
+        log("Calling <em>hasConsented()</em>: <strong>" + p.hasConsented() + "</strong>");
+      };
+
+      document.getElementById('btn-hasAnswered').onclick = function (e) {
+        log("Calling <em>hasAnswered()</em>: <strong>" + p.hasAnswered() + "</strong> (status: '" + p.getStatus() + "')");
       };
 
     </script>

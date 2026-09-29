@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="../">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Demo 8 - Google Consent Mode v2 & GTM | teckgeekz-consent</title>
+
+  <link href="examples/style.css" rel="stylesheet">
+  <link href="build/cookieconsent.min.css" rel="stylesheet">
+
+  <!-- Step 1: Initialize Google Consent Mode v2 default state BEFORE any tags load -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+
+    // Set default consent state to 'denied'
+    gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'analytics_storage': 'denied',
+      'ad_user_data': 'denied',
+      'ad_personalization': 'denied',
+      'wait_for_update': 500
+    });
+  </script>
+</head>
+
+<body class="example8" role="document">
+
+  <div class="demo-topbar">
+    <div class="brand">teckgeekz-<span>consent</span></div>
+    <div>
+      <a href="examples/index.html">&larr; Back to All Demos</a> &bull;
+      <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz.com</a>
+    </div>
+  </div>
+
+  <div class="center-outer fit">
+    <div class="center-inner">
+      <div class="example-window" role="main" style="padding-top: 60px;">
+
+        <h1>
+          <span>Demo 8</span> Google Consent Mode v2 &amp; GTM</h1>
+
+        <p>
+          Integrate <a href="https://teckgeekz.com" target="_blank" rel="noopener noreferrer">teckgeekz-consent</a> directly with Google Consent Mode v2 and Google Tag Manager.
+        </p>
+
+        <p style="font-size: 15px; opacity: 0.85; max-width: 600px; margin: 0 auto 20px;">
+          Accepting or declining cookies below updates the Google consent signals and pushes an event into <code>window.dataLayer</code> in real-time.
+        </p>
+
+        <div class="btn-group">
+          <button type="button" class="btn" id="btn-reopen">Open Cookie Banner</button>
+          <button type="button" class="btn" id="btn-clear">Clear Consent &amp; Reset</button>
+        </div>
+
+        <h3>Live dataLayer Log</h3>
+        <pre id="console" style="max-height: 220px;"></pre>
+
+        <a href="examples/example-7-javascript-api.html" class="page-switcher page-switcher-prev" title="Previous demo">&#9664;</a>
+        <a href="examples/index.html" class="page-switcher page-switcher-next" title="Back to Index">&#9654;</a>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="examples/script.js"></script>
+  <script src="build/cookieconsent.min.js"></script>
+  <script>
+    var logEl = document.getElementById('console');
+
+    function logDataLayer(title, payload) {
+      logEl.innerHTML += timeStamp() + '<strong>' + title + '</strong>: ' + JSON.stringify(payload) + '<br>';
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    logDataLayer('Initial Default Consent', {
+      ad_storage: 'denied',
+      analytics_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied'
+    });
+
+    var consentPopup;
+
+    cookieconsent.initialise({
+      type: 'opt-in',
+      position: 'bottom',
+      palette: {
+        popup: { background: "#0f172a", text: "#e2e8f0" },
+        button: { background: "#38bdf8", text: "#0f172a" }
+      },
+      content: {
+        message: "We use cookies to measure website traffic and deliver personalized advertising.",
+        allow: "Accept All",
+        deny: "Decline",
+        link: "Privacy Policy",
+        href: "https://teckgeekz.com"
+      },
+      onInitialise: function (status) {
+        logDataLayer('onInitialise()', { status: status, hasConsented: this.hasConsented() });
+        if (this.hasConsented()) {
+          updateGoogleConsent('granted', 'granted');
+        }
+      },
+      onStatusChange: function (status) {
+        logDataLayer('onStatusChange()', { status: status, hasConsented: this.hasConsented() });
+        if (this.hasConsented()) {
+          updateGoogleConsent('granted', 'granted');
+        } else {
+          updateGoogleConsent('denied', 'denied');
+        }
+      },
+      onRevokeChoice: function () {
+        logDataLayer('onRevokeChoice()', { status: 'revoked' });
+        updateGoogleConsent('denied', 'denied');
+      }
+    }, function (popup) {
+      consentPopup = popup;
+    });
+
+    function updateGoogleConsent(analyticsState, marketingState) {
+      gtag('consent', 'update', {
+        'analytics_storage': analyticsState,
+        'ad_storage': marketingState,
+        'ad_user_data': marketingState,
+        'ad_personalization': marketingState
+      });
+
+      window.dataLayer.push({
+        event: 'cookie_consent_update',
+        consent_analytics: analyticsState,
+        consent_marketing: marketingState
+      });
+
+      logDataLayer('gtag(consent, update)', {
+        analytics_storage: analyticsState,
+        ad_storage: marketingState,
+        event: 'cookie_consent_update'
+      });
+    }
+
+    document.getElementById('btn-reopen').onclick = function () {
+      if (consentPopup) {
+        consentPopup.open();
+      }
+    };
+
+    document.getElementById('btn-clear').onclick = function () {
+      if (consentPopup) {
+        consentPopup.clearStatus();
+        updateGoogleConsent('denied', 'denied');
+        consentPopup.open();
+        logDataLayer('Status Cleared', { cookie: 'deleted' });
+      }
+    };
+  </script>
+
+</body>
+</html>
