@@ -120,8 +120,48 @@ window['cookieconsent_example_util'] = {
     }
 
     return instances;
+  },
+
+  enableLocalFileFallback: function(C) {
+    var consentLib = C || (typeof window !== 'undefined' ? window.cookieconsent : null);
+    if (!consentLib || !consentLib.utils) return;
+    var u = consentLib.utils;
+    if (u._hasLocalFallback) return;
+    u._hasLocalFallback = true;
+    var origGet = u.getCookie;
+    var origSet = u.setCookie;
+    u.getCookie = function(name) {
+      var val = origGet.call(u, name);
+      if (val !== undefined) return val;
+      try {
+        var local = localStorage.getItem('cc_' + name);
+        if (local !== null) return local;
+      } catch (e) {}
+      return undefined;
+    };
+    u.setCookie = function(name, value, expiryDays, domain, path, secure, sameSite) {
+      origSet.call(u, name, value, expiryDays, domain, path, secure, sameSite);
+      try {
+        if ((expiryDays !== undefined && expiryDays < 0) || !value) {
+          localStorage.removeItem('cc_' + name);
+        } else {
+          localStorage.setItem('cc_' + name, value);
+        }
+      } catch (e) {}
+    };
   }
 };
+
+if (typeof window !== 'undefined' && window.location && window.location.protocol === 'file:') {
+  var tryEnable = function() {
+    if (window.cookieconsent && window.cookieconsent_example_util) {
+      window.cookieconsent_example_util.enableLocalFileFallback(window.cookieconsent);
+    }
+  };
+  tryEnable();
+  window.addEventListener('DOMContentLoaded', tryEnable);
+  window.addEventListener('load', tryEnable);
+}
 
 function timeStamp() {
   var now = new Date();

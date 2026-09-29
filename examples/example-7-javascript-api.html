@@ -54,6 +54,7 @@
           <button type="button" class="btn" id="btn-revokeChoice">Revoke</button>
           <button type="button" class="btn" id="btn-hasConsented">hasConsented()</button>
           <button type="button" class="btn" id="btn-hasAnswered">hasAnswered()</button>
+          <button type="button" class="btn" id="btn-getStatus">getStatus()</button>
         </div>
 
         <h3>Console Log</h3>
@@ -78,6 +79,10 @@
     var log = function (message) {
       h.innerHTML += timeStamp() + message + "<br>";
       h.scrollTop = h.scrollHeight;
+    }
+
+    if (window.cookieconsent_example_util) {
+      window.cookieconsent_example_util.enableLocalFileFallback(cookieconsent);
     }
 
     var p;
@@ -162,12 +167,17 @@
       log("<span class='alert'>Cookie Consent has been destroyed and cannot be used again. Reload the page.</span>");
     };
 
+    document.getElementById('btn-getStatus').onclick = function (e) {
+      var currentStatus = p.getStatus();
+      log("Calling <em>getStatus()</em>: " + (currentStatus !== undefined ? "<strong>'" + currentStatus + "'</strong>" : "<em>undefined (no consent choice recorded yet)</em>"));
+    };
+
     document.getElementById('btn-hasConsented').onclick = function (e) {
       log("Calling <em>hasConsented()</em>: <strong>" + p.hasConsented() + "</strong>");
     };
 
     document.getElementById('btn-hasAnswered').onclick = function (e) {
-      log("Calling <em>hasAnswered()</em>: <strong>" + p.hasAnswered() + "</strong> (status: '" + p.getStatus() + "')");
+      var currentStatus = p.getStatus();
+      log("Calling <em>hasAnswered()</em>: <strong>" + p.hasAnswered() + "</strong> &mdash; status: " + (currentStatus !== undefined ? "<strong>'" + currentStatus + "'</strong>" : "<em>undefined (unanswered)</em>"));
     };
-
   </script>

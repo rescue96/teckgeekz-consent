@@ -1,6 +1,6 @@
 {
   "name": "teckgeekz-consent",
-  "version": "3.1.5",
+  "version": "3.1.6",
   "description": "Lightweight, accessible Cookie Consent plugin with native Google Consent Mode v2, granular preferences modal, and multi-framework support by Teckgeekz",
   "main": "build/cookieconsent.min.js",
   "types": "index.d.ts",

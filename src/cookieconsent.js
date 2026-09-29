@@ -36,15 +36,32 @@
     },
 
     getCookie: function(name) {
-      if (typeof document === 'undefined') return undefined;
-      var value = '; ' + document.cookie;
-      var parts = value.split('; ' + name + '=');
-      return parts.length < 2
-        ? undefined
-        : parts
+      if (typeof document !== 'undefined') {
+        var value = '; ' + document.cookie;
+        var parts = value.split('; ' + name + '=');
+        if (parts.length >= 2) {
+          return parts
             .pop()
             .split(';')
             .shift();
+        }
+      }
+
+      // Seamless fallback for file:// protocol, sandboxed iframes, or when cookies are disabled
+      if (typeof localStorage !== 'undefined') {
+        try {
+          var localVal = localStorage.getItem('cc_' + name);
+          if (localVal !== null) {
+            return localVal;
+          }
+        } catch (e) {}
+      }
+
+      if (util._cookieMemory && typeof util._cookieMemory[name] !== 'undefined') {
+        return util._cookieMemory[name];
+      }
+
+      return undefined;
     },
 
     setCookie: function(name, value, expiryDays, domain, path, secure, sameSite) {
@@ -71,6 +88,26 @@
       }
       if (typeof document !== 'undefined') {
         document.cookie = cookie.join('; ');
+      }
+
+      // Seamless fallback for file:// protocol, sandboxed iframes, or when cookies are disabled
+      util._cookieMemory = util._cookieMemory || {};
+      var isExpired = (expiryDays !== undefined && expiryDays < 0) || !value;
+
+      if (typeof localStorage !== 'undefined') {
+        try {
+          if (isExpired) {
+            localStorage.removeItem('cc_' + name);
+          } else {
+            localStorage.setItem('cc_' + name, value);
+          }
+        } catch (e) {}
+      }
+
+      if (isExpired) {
+        delete util._cookieMemory[name];
+      } else {
+        util._cookieMemory[name] = value;
       }
     },
 
