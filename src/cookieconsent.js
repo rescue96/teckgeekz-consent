@@ -467,10 +467,12 @@
       }
 
       // apply blacklist / whitelist
-      if (arrayContainsMatches(this.options.blacklistPage, location.pathname)) {
+      var currentPath =
+        (typeof location !== 'undefined' && location.pathname) || '';
+      if (arrayContainsMatches(this.options.blacklistPage, currentPath)) {
         this.options.enabled = false;
       }
-      if (arrayContainsMatches(this.options.whitelistPage, location.pathname)) {
+      if (arrayContainsMatches(this.options.whitelistPage, currentPath)) {
         this.options.enabled = true;
       }
 
@@ -582,6 +584,14 @@
         this.revokeBtn.parentNode.removeChild(this.revokeBtn);
       }
       this.revokeBtn = null;
+
+      if (
+        this.preferencesModal &&
+        typeof this.preferencesModal.destroy === 'function'
+      ) {
+        this.preferencesModal.destroy();
+        this.preferencesModal = null;
+      }
 
       if (this.options) {
         removeCustomStyle(this.options.palette);
@@ -791,11 +801,12 @@
       var self = this;
       var opts = util.deepExtend(
         {
+          cookie: this.options && this.options.cookie,
           privacyPolicyUrl:
             (this.options &&
               this.options.content &&
               this.options.content.href) ||
-            '/privacy-policy',
+            'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
           onSave: function(consents) {
             var anyGranted = consents.analytics || consents.marketing;
             self.setStatus(anyGranted ? cc.status.allow : cc.status.deny);
@@ -813,6 +824,7 @@
       if (modal && typeof modal.open === 'function') {
         modal.open();
       }
+      this.preferencesModal = modal;
       return modal;
     };
 
@@ -2142,22 +2154,60 @@
 
     options = options || {};
     var privacyHref =
-      options.privacyPolicyUrl || options.href || '/privacy-policy';
+      options.privacyPolicyUrl ||
+      options.href ||
+      'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies';
     var existingModal = document.getElementById('cookie-modal');
 
     var getCookieVal = function(name) {
-      if (typeof options.getCookieValue === 'function') {
-        return options.getCookieValue(name);
+      var activeOpts =
+        (existingModal && existingModal._teckgeekzOptions) || options;
+      if (typeof activeOpts.getCookieValue === 'function') {
+        return activeOpts.getCookieValue(name);
       }
       return util.getCookie(name) || '';
     };
 
+    var setCategoryCookie = function(name, val) {
+      var activeOpts =
+        (existingModal && existingModal._teckgeekzOptions) || options;
+      var cOpts = activeOpts.cookie || {};
+      util.setCookie(
+        name,
+        val,
+        cOpts.expiryDays || 365,
+        cOpts.domain || '',
+        cOpts.path || '/',
+        cOpts.secure || false,
+        cOpts.sameSite || 'Lax'
+      );
+    };
+
+    var isCategoryChecked = function(categoryName) {
+      var val = getCookieVal(categoryName);
+      if (val === 'true') return true;
+      if (val === 'false') return false;
+      var activeOpts =
+        (existingModal && existingModal._teckgeekzOptions) || options;
+      var cookieName =
+        (activeOpts.cookie && activeOpts.cookie.name) ||
+        activeOpts.cookieName ||
+        'cookieconsent_status';
+      var status = util.getCookie(cookieName);
+      return status === cc.status.allow || status === cc.status.dismiss;
+    };
+
     var recordConsent = function(analytics, marketing) {
-      if (typeof options.storeConsentRecord === 'function') {
-        options.storeConsentRecord(analytics, marketing);
+      var activeOpts =
+        (existingModal && existingModal._teckgeekzOptions) || options;
+      if (typeof activeOpts.storeConsentRecord === 'function') {
+        activeOpts.storeConsentRecord(analytics, marketing);
         return;
       }
-      if (typeof window.storeConsentRecord === 'function') {
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.storeConsentRecord === 'function'
+      ) {
         window.storeConsentRecord(analytics, marketing);
         return;
       }
@@ -2166,8 +2216,14 @@
           analytics: analytics,
           marketing: marketing,
           timestamp: new Date().toISOString(),
-          url: window.location ? window.location.href : '',
-          userAgent: window.navigator ? window.navigator.userAgent : ''
+          url:
+            typeof window !== 'undefined' && window.location
+              ? window.location.href
+              : '',
+          userAgent:
+            typeof window !== 'undefined' && window.navigator
+              ? window.navigator.userAgent
+              : ''
         };
         if (typeof localStorage !== 'undefined') {
           localStorage.setItem(
@@ -2179,11 +2235,16 @@
     };
 
     var notifyGtag = function(analyticsVal, marketingVal) {
-      if (typeof options.updateGtagConsent === 'function') {
-        options.updateGtagConsent(analyticsVal, marketingVal);
+      var activeOpts =
+        (existingModal && existingModal._teckgeekzOptions) || options;
+      if (typeof activeOpts.updateGtagConsent === 'function') {
+        activeOpts.updateGtagConsent(analyticsVal, marketingVal);
         return;
       }
-      if (typeof window.updateGtagConsent === 'function') {
+      if (
+        typeof window !== 'undefined' &&
+        typeof window.updateGtagConsent === 'function'
+      ) {
         window.updateGtagConsent(analyticsVal, marketingVal);
         return;
       }
@@ -2192,14 +2253,27 @@
           analytics: analyticsVal === 'granted',
           marketing: marketingVal === 'granted'
         },
-        options.googleConsentMode || {}
+        activeOpts.googleConsentMode || {}
       );
     };
 
-    if (!existingModal) {
+    if (existingModal) {
+      existingModal._teckgeekzOptions = options;
+      if (typeof existingModal.querySelector === 'function') {
+        var link = existingModal.querySelector('#cookie-modal a');
+        if (link && privacyHref) {
+          if (typeof link.setAttribute === 'function') {
+            link.setAttribute('href', privacyHref);
+          } else {
+            link.href = privacyHref;
+          }
+        }
+      }
+    } else {
       var modalHTML = [
         '<div id="cookie-modal" class="fixed inset-0 z-9999 flex items-center justify-center bg-black/80" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="cookie-modal-title" aria-describedby="cookie-modal-description">',
-        '  <div class="bg-background text-foreground p-6 md:p-8 rounded-lg shadow-2xl max-w-lg w-[90vw] border border-border max-h-[90vh] overflow-y-auto">',
+        '  <div class="bg-background text-foreground p-6 md:p-8 rounded-lg shadow-2xl max-w-lg w-[90vw] border border-border max-h-[90vh] overflow-y-auto relative">',
+        '    <button id="cookie-modal-close" type="button" aria-label="Close Cookie Preferences">&times;</button>',
         '    <h2 id="cookie-modal-title" class="text-2xl font-semibold mb-4">Cookie Preferences</h2>',
         '    <p id="cookie-modal-description" class="text-muted-foreground mb-6">Manage your cookie settings. You can change your preferences at any time.</p>',
         '    ',
@@ -2251,27 +2325,43 @@
 
       document.body.insertAdjacentHTML('beforeend', modalHTML);
       existingModal = document.getElementById('cookie-modal');
+      existingModal._teckgeekzOptions = options;
 
       var modal = existingModal;
       var analyticsCheckbox = document.getElementById('analytics-consent');
       var marketingCheckbox = document.getElementById('marketing-consent');
+      var closeBtn = document.getElementById('cookie-modal-close');
       var rejectBtn = document.getElementById('cookie-modal-reject');
       var saveBtn = document.getElementById('cookie-modal-save');
 
       var syncCheckboxes = function() {
         if (analyticsCheckbox) {
-          analyticsCheckbox.checked = getCookieVal('analytics') === 'true';
+          analyticsCheckbox.checked = isCategoryChecked('analytics');
         }
         if (marketingCheckbox) {
-          marketingCheckbox.checked = getCookieVal('marketing') === 'true';
+          marketingCheckbox.checked = isCategoryChecked('marketing');
         }
       };
 
       syncCheckboxes();
 
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+          modal.style.display = 'none';
+          var activeOpts = modal._teckgeekzOptions || options;
+          if (typeof activeOpts.onClose === 'function') {
+            activeOpts.onClose();
+          }
+        });
+      }
+
       modal.addEventListener('click', function(e) {
         if (e.target === modal) {
           modal.style.display = 'none';
+          var activeOpts = modal._teckgeekzOptions || options;
+          if (typeof activeOpts.onClose === 'function') {
+            activeOpts.onClose();
+          }
         }
       });
 
@@ -2281,6 +2371,10 @@
           modal.style.display !== 'none'
         ) {
           modal.style.display = 'none';
+          var activeOpts = modal._teckgeekzOptions || options;
+          if (typeof activeOpts.onClose === 'function') {
+            activeOpts.onClose();
+          }
         }
       });
 
@@ -2289,14 +2383,8 @@
           var aChecked = !!(analyticsCheckbox && analyticsCheckbox.checked);
           var mChecked = !!(marketingCheckbox && marketingCheckbox.checked);
 
-          document.cookie =
-            'analytics=' +
-            aChecked +
-            '; path=/; max-age=31536000; SameSite=Strict';
-          document.cookie =
-            'marketing=' +
-            mChecked +
-            '; path=/; max-age=31536000; SameSite=Strict';
+          setCategoryCookie('analytics', aChecked);
+          setCategoryCookie('marketing', mChecked);
 
           // Store consent record for GDPR compliance
           recordConsent(aChecked, mChecked);
@@ -2308,18 +2396,17 @@
 
           modal.style.display = 'none';
 
-          if (typeof options.onSave === 'function') {
-            options.onSave({ analytics: aChecked, marketing: mChecked });
+          var activeOpts = modal._teckgeekzOptions || options;
+          if (typeof activeOpts.onSave === 'function') {
+            activeOpts.onSave({ analytics: aChecked, marketing: mChecked });
           }
         });
       }
 
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
-          document.cookie =
-            'analytics=false; path=/; max-age=31536000; SameSite=Strict';
-          document.cookie =
-            'marketing=false; path=/; max-age=31536000; SameSite=Strict';
+          setCategoryCookie('analytics', false);
+          setCategoryCookie('marketing', false);
 
           if (analyticsCheckbox) analyticsCheckbox.checked = false;
           if (marketingCheckbox) marketingCheckbox.checked = false;
@@ -2331,8 +2418,9 @@
 
           modal.style.display = 'none';
 
-          if (typeof options.onReject === 'function') {
-            options.onReject();
+          var activeOpts = modal._teckgeekzOptions || options;
+          if (typeof activeOpts.onReject === 'function') {
+            activeOpts.onReject();
           }
         });
       }
@@ -2345,14 +2433,27 @@
         if (modalEl) {
           var aBox = document.getElementById('analytics-consent');
           var mBox = document.getElementById('marketing-consent');
-          if (aBox) aBox.checked = getCookieVal('analytics') === 'true';
-          if (mBox) mBox.checked = getCookieVal('marketing') === 'true';
+          if (aBox) aBox.checked = isCategoryChecked('analytics');
+          if (mBox) mBox.checked = isCategoryChecked('marketing');
           modalEl.style.display = 'flex';
+          var activeOpts = modalEl._teckgeekzOptions || options;
+          if (typeof activeOpts.onOpen === 'function') {
+            activeOpts.onOpen();
+          }
         }
       },
       close: function() {
         if (modalEl) {
           modalEl.style.display = 'none';
+          var activeOpts = modalEl._teckgeekzOptions || options;
+          if (typeof activeOpts.onClose === 'function') {
+            activeOpts.onClose();
+          }
+        }
+      },
+      destroy: function() {
+        if (modalEl && modalEl.parentNode) {
+          modalEl.parentNode.removeChild(modalEl);
         }
       }
     };

@@ -447,7 +447,19 @@ The instance returned by `initialise` provides the following methods:
 ```javascript
 // Create or retrieve the preferences modal controller
 const modal = window.cookieconsent.createCookieModal({
-  privacyPolicyUrl: 'https://teckgeekz.com/privacy-policy',
+  privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
+  cookie: {
+    domain: '',         // Optional cookie domain (e.g. '.example.com')
+    path: '/',          // Path scope (default: '/')
+    expiryDays: 365,    // Expiry in days (default: 365)
+    sameSite: 'Lax'     // 'Lax' | 'Strict' | 'None'
+  },
+  onOpen: function() {
+    console.log('Preferences modal opened');
+  },
+  onClose: function() {
+    console.log('Preferences modal closed');
+  },
   onSave: function(consents) {
     console.log('Preferences saved:', consents);
     // e.g. { analytics: true, marketing: false }
@@ -464,8 +476,9 @@ const modal = window.cookieconsent.createCookieModal({
 });
 
 // Programmatic controls:
-modal.open();   // Opens the preferences modal and syncs current cookie states
-modal.close();  // Hides the preferences modal
+modal.open();    // Opens the preferences modal and syncs current category cookie states
+modal.close();   // Hides the preferences modal
+modal.destroy(); // Completely cleans up modal element and event listeners from DOM
 ```
 
 ### Google Consent Mode v2 API

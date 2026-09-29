@@ -328,6 +328,7 @@ test('createCookieModal and popup.openPreferences support teckgeekz granular con
   assert.ok(modalController, 'createCookieModal returns controller');
   assert.strictEqual(typeof modalController.open, 'function');
   assert.strictEqual(typeof modalController.close, 'function');
+  assert.strictEqual(typeof modalController.destroy, 'function');
 
   // Verify popup can open preferences
   const popup = new cookieconsent.Popup({
@@ -338,6 +339,11 @@ test('createCookieModal and popup.openPreferences support teckgeekz granular con
   assert.strictEqual(typeof popup.openPreferences, 'function');
   const openedModal = popup.openPreferences();
   assert.ok(openedModal, 'popup.openPreferences returned modal controller');
+  assert.strictEqual(typeof openedModal.destroy, 'function');
+
+  // Verify popup.destroy cleans up preferencesModal
+  popup.destroy();
+  assert.strictEqual(popup.preferencesModal, null);
 });
 
 test('Google Consent Mode v2 payload mapping and API utilities', () => {

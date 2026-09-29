@@ -112,10 +112,14 @@ export interface CookieStorageOptions {
 export interface CookieModalOptions {
   privacyPolicyUrl?: string;
   href?: string;
+  cookie?: CookieStorageOptions;
+  cookieName?: string;
   getCookieValue?: (name: string) => string;
   storeConsentRecord?: (analytics: boolean, marketing: boolean) => void;
   updateGtagConsent?: (analyticsState: 'granted' | 'denied', marketingState: 'granted' | 'denied') => void;
   googleConsentMode?: GoogleConsentModeOptions;
+  onOpen?: () => void;
+  onClose?: () => void;
   onSave?: (consents: { analytics: boolean; marketing: boolean }) => void;
   onReject?: () => void;
 }
@@ -124,6 +128,7 @@ export interface CookieModalController {
   element: HTMLElement | null;
   open: () => void;
   close: () => void;
+  destroy: () => void;
 }
 
 export interface CookiePopupOptions {

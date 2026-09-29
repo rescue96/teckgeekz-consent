@@ -245,11 +245,17 @@
     document.getElementById('btn-modal').addEventListener('click', function() {
       if (consentPopup) {
         consentPopup.openPreferences({
-          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
+          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
+          onClose: function() {
+            logEvent('Preferences modal closed');
+          }
         });
       } else {
         var modal = cookieconsent.createCookieModal({
-          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies'
+          privacyPolicyUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
+          onClose: function() {
+            logEvent('Preferences modal closed');
+          }
         });
         if (modal) modal.open();
       }
