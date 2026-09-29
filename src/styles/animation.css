@@ -48,3 +48,16 @@
   -o-transition: max-height 1s;
   transition: max-height 1s;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-window,
+  .cc-animate.cc-revoke,
+  .cc-grower {
+    -webkit-transition: none !important;
+    -moz-transition: none !important;
+    -ms-transition: none !important;
+    -o-transition: none !important;
+    transition: none !important;
+  }
+}
+

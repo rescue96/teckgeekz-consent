@@ -28,6 +28,7 @@
     },
 
     interpolateString: function(str, callback) {
+      if (typeof str !== 'string') return '';
       var marker = /{{([a-z][a-z0-9\-_]*)}}/gi;
       return str.replace(marker, function(matches) {
         return callback(arguments[1]) || '';
@@ -35,6 +36,7 @@
     },
 
     getCookie: function(name) {
+      if (typeof document === 'undefined') return undefined;
       var value = '; ' + document.cookie;
       var parts = value.split('; ' + name + '=');
       return parts.length < 2
@@ -45,7 +47,7 @@
             .shift();
     },
 
-    setCookie: function(name, value, expiryDays, domain, path, secure) {
+    setCookie: function(name, value, expiryDays, domain, path, secure, sameSite) {
       var exdate = new Date();
       exdate.setHours(exdate.getHours() + ((expiryDays || 365) * 24));
 
@@ -58,10 +60,18 @@
       if (domain) {
         cookie.push('domain=' + domain);
       }
+      if (sameSite && sameSite.toLowerCase() === 'none') {
+        secure = true;
+      }
       if (secure) {
         cookie.push('secure');
       }
-      document.cookie = cookie.join(';');
+      if (sameSite) {
+        cookie.push('samesite=' + sameSite);
+      }
+      if (typeof document !== 'undefined') {
+        document.cookie = cookie.join('; ');
+      }
     },
 
     // only used for extending the initial options
@@ -150,8 +160,12 @@
     },
 
     isMobile: function() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
+      return (
+        typeof navigator !== 'undefined' &&
+        !!navigator.userAgent &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent
+        )
       );
     },
 
@@ -179,6 +193,7 @@
 
   // detects the `transitionend` event name
   cc.transitionEnd = (function() {
+    if (typeof document === 'undefined') return '';
     var el = document.createElement('div');
     var trans = {
       t: 'transitionend',
@@ -231,7 +246,10 @@
         expiryDays: 365,
 
         // If true the cookie will be created with the secure flag. Secure cookies will only be transmitted via HTTPS.
-        secure: false
+        secure: false,
+
+        // SameSite cookie policy attribute: 'Lax', 'Strict', or 'None'
+        sameSite: 'Lax'
       },
 
       // these callback hooks are called at certain points in the program execution
@@ -290,7 +308,8 @@
 
       // This is the html for the revoke button. This only shows up after the user has selected their level of consent
       // It can be enabled of disabled using the `revokable` option
-      revokeBtn: '<div class="cc-revoke {{classes}}">{{policy}}</div>',
+      revokeBtn:
+        '<div tabindex="0" role="button" aria-label="Cookie Policy and Consent Preferences" class="cc-revoke {{classes}}">{{policy}}</div>',
 
       // define types of 'compliance' here. '{{value}}' strings in here are linked to `elements`
       compliance: {
@@ -465,9 +484,29 @@
     };
 
     CookiePopup.prototype.destroy = function() {
-      if (this.onButtonClick && this.element) {
-        this.element.removeEventListener('click', this.onButtonClick);
+      if (this.openingTimeout) {
+        clearTimeout(this.openingTimeout);
+        this.openingTimeout = null;
+      }
+
+      if (this.onButtonClick) {
+        if (this.element) {
+          this.element.removeEventListener('click', this.onButtonClick);
+        }
+        if (this.revokeBtn) {
+          this.revokeBtn.removeEventListener('click', this.onButtonClick);
+        }
         this.onButtonClick = null;
+      }
+
+      if (this.onButtonKeydown) {
+        if (this.element) {
+          this.element.removeEventListener('keydown', this.onButtonKeydown);
+        }
+        if (this.revokeBtn) {
+          this.revokeBtn.removeEventListener('keydown', this.onButtonKeydown);
+        }
+        this.onButtonKeydown = null;
       }
 
       if (this.dismissTimeout) {
@@ -482,6 +521,7 @@
 
       if (this.onWindowClick) {
         window.removeEventListener('click', this.onWindowClick);
+        window.removeEventListener('touchend', this.onWindowClick);
         this.onWindowClick = null;
       }
 
@@ -490,8 +530,23 @@
         this.onMouseMove = null;
       }
 
-      if (this.element && this.element.parentNode) {
-        this.element.parentNode.removeChild(this.element);
+      if (this.afterTransition && this.element) {
+        this.element.removeEventListener(cc.transitionEnd, this.afterTransition);
+        this.afterTransition = null;
+      }
+
+      var toRemove = this.element;
+      if (toRemove) {
+        // If static grower wrapper was used, remove the grower wrapper
+        if (
+          toRemove.parentNode &&
+          util.hasClass(toRemove.parentNode, 'cc-grower')
+        ) {
+          toRemove = toRemove.parentNode;
+        }
+        if (toRemove.parentNode) {
+          toRemove.parentNode.removeChild(toRemove);
+        }
       }
       this.element = null;
 
@@ -500,7 +555,9 @@
       }
       this.revokeBtn = null;
 
-      removeCustomStyle(this.options.palette);
+      if (this.options) {
+        removeCustomStyle(this.options.palette);
+      }
       this.options = null;
     };
 
@@ -583,7 +640,7 @@
 
       if (this.openingTimeout) {
         clearTimeout(this.openingTimeout);
-        afterFadeIn.bind(this, el);
+        this.openingTimeout = null;
       }
 
       if (!util.hasClass(el, 'cc-invisible')) {
@@ -591,8 +648,16 @@
           this.element.parentNode.style.maxHeight = '';
         }
 
+        var self = this;
         this.afterTransition = afterFadeOut.bind(this, el);
         el.addEventListener(cc.transitionEnd, this.afterTransition);
+
+        // Fallback safety timer in case transitionend does not fire
+        setTimeout(function() {
+          if (self.afterTransition) {
+            self.afterTransition();
+          }
+        }, 1100);
 
         util.addClass(el, 'cc-invisible');
       }
@@ -636,7 +701,7 @@
     CookiePopup.prototype.autoOpen = function(options) {
       if (!this.hasAnswered() && this.options.enabled) {
         this.open();
-      } else if (this.hasAnswered() && this.options.revokable) {
+      } else if (this.hasAnswered() && this.options.enabled && this.options.revokable) {
         this.toggleRevokeButton(true);
       }
     };
@@ -654,7 +719,8 @@
           c.expiryDays,
           c.domain,
           c.path,
-          c.secure
+          c.secure,
+          c.sameSite
         );
 
         this.options.onStatusChange.call(this, status, chosenBefore);
@@ -669,22 +735,28 @@
 
     CookiePopup.prototype.clearStatus = function() {
       var c = this.options.cookie;
-      util.setCookie(c.name, '', -1, c.domain, c.path);
+      util.setCookie(c.name, '', -1, c.domain, c.path, c.secure, c.sameSite);
     };
 
     // This needs to be called after 'fadeIn'. This is the code that actually causes the fadeIn to work
     // There is a good reason why it's called in a timeout. Read 'fadeIn';
     function afterFadeIn(el) {
       this.openingTimeout = null;
-      util.removeClass(el, 'cc-invisible');
+      if (el) {
+        util.removeClass(el, 'cc-invisible');
+      }
     }
 
     // This is called on 'transitionend' (only on the transition of the fadeOut). That's because after we've faded out, we need to
     // set the display to 'none' (so there aren't annoying invisible popups all over the page). If for whenever reason this function
     // is not called (lack of support), the open/close mechanism will still work.
     function afterFadeOut(el) {
-      el.style.display = 'none'; // after close and before open, the display should be none
-      el.removeEventListener(cc.transitionEnd, this.afterTransition);
+      if (el) {
+        el.style.display = 'none'; // after close and before open, the display should be none
+        if (this.afterTransition && cc.transitionEnd) {
+          el.removeEventListener(cc.transitionEnd, this.afterTransition);
+        }
+      }
       this.afterTransition = null;
     }
 
@@ -820,10 +892,16 @@
         util.addClass(el, 'cc-invisible');
       }
 
-      // save ref to the function handle so we can unbind it later
-      this.onButtonClick = handleButtonClick.bind(this);
+      // save ref to the function handle so we can unbind it later (reuse if already bound)
+      if (!this.onButtonClick) {
+        this.onButtonClick = handleButtonClick.bind(this);
+      }
+      if (!this.onButtonKeydown) {
+        this.onButtonKeydown = handleButtonKeydown.bind(this);
+      }
 
       el.addEventListener('click', this.onButtonClick);
+      el.addEventListener('keydown', this.onButtonKeydown);
 
       if (opts.autoAttach) {
         if (!cont.firstChild) {
@@ -857,6 +935,28 @@
       }
       if (util.hasClass(btn, 'cc-revoke')) {
         this.revokeChoice();
+      }
+    }
+
+    function handleButtonKeydown(event) {
+      var key = event.key || event.keyCode;
+      if (
+        key === 'Enter' ||
+        key === 13 ||
+        key === ' ' ||
+        key === 32 ||
+        key === 'Spacebar'
+      ) {
+        var btn = util.traverseDOMPath(event.target, 'cc-btn') || event.target;
+        if (
+          btn &&
+          (util.hasClass(btn, 'cc-btn') ||
+            util.hasClass(btn, 'cc-close') ||
+            util.hasClass(btn, 'cc-revoke'))
+        ) {
+          event.preventDefault();
+          handleButtonClick.call(this, event);
+        }
       }
     }
 
@@ -961,7 +1061,13 @@
 
       // this will be interpretted as CSS. the key is the selector, and each array element is a rule
       var style = document.createElement('style');
-      document.head.appendChild(style);
+      var head =
+        document.head ||
+        document.getElementsByTagName('head')[0] ||
+        document.body;
+      if (head) {
+        head.appendChild(style);
+      }
 
       // custom style doesn't exist, so we create it
       cc.customStyles[hash] = {
@@ -972,10 +1078,16 @@
       var ruleIndex = -1;
       for (var prop in colorStyles) {
         if (colorStyles.hasOwnProperty(prop)) {
-          style.sheet.insertRule(
-            prop + '{' + colorStyles[prop].join(';') + '}',
-            ++ruleIndex
-          );
+          if (style.sheet && typeof style.sheet.insertRule === 'function') {
+            try {
+              style.sheet.insertRule(
+                prop + '{' + colorStyles[prop].join(';') + '}',
+                ++ruleIndex
+              );
+            } catch (e) {
+              // Ignore invalid rules to prevent breaking execution
+            }
+          }
         }
       }
     }
@@ -994,11 +1106,12 @@
         var hash = util.hash(JSON.stringify(palette));
         var customStyle = cc.customStyles[hash];
         if (customStyle && !--customStyle.references) {
-          var styleNode = customStyle.element.ownerNode;
+          var styleNode =
+            customStyle.element && customStyle.element.ownerNode;
           if (styleNode && styleNode.parentNode) {
             styleNode.parentNode.removeChild(styleNode);
           }
-          cc.customStyles[hash] = null;
+          delete cc.customStyles[hash];
         }
       }
     }
@@ -1052,7 +1165,17 @@
       if (windowClick) {
         var onWindowClick = function(evt) {
           var isIgnored = false;
-          var pathLen = evt.path.length;
+          var path = evt.composedPath
+            ? evt.composedPath()
+            : evt.path || [];
+          if (!path.length && evt.target) {
+            var curr = evt.target;
+            while (curr) {
+              path.push(curr);
+              curr = curr.parentNode;
+            }
+          }
+          var pathLen = path.length;
           var ignoredLen = ignoredClicks.length;
           for (var i = 0; i < pathLen; i++) {
             if (isIgnored) continue;
@@ -1060,7 +1183,7 @@
             for (var i2 = 0; i2 < ignoredLen; i2++) {
               if (isIgnored) continue;
 
-              isIgnored = util.hasClass(evt.path[i], ignoredClicks[i2]);
+              isIgnored = util.hasClass(path[i], ignoredClicks[i2]);
             }
           }
 
@@ -1530,7 +1653,7 @@
         'MSXML2.XMLHTTP.3.0'
       );
 
-      xhr.open(postData ? 'POST' : 'GET', url, 1);
+      xhr.open(postData ? 'POST' : 'GET', url, true);
 
       xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
@@ -1545,11 +1668,30 @@
       }
 
       if (typeof onComplete == 'function') {
-        xhr.onreadystatechange = function() {
-          if (xhr.readyState > 3) {
+        var completed = false;
+        var handleComplete = function() {
+          if (!completed) {
+            completed = true;
             onComplete(xhr);
           }
         };
+
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState > 3) {
+            handleComplete();
+          }
+        };
+
+        xhr.onerror = function() {
+          handleComplete();
+        };
+
+        if (timeout && typeof xhr.timeout !== 'undefined') {
+          xhr.timeout = timeout;
+          xhr.ontimeout = function() {
+            handleComplete();
+          };
+        }
       }
 
       xhr.send(postData);
@@ -1677,15 +1819,16 @@
   // This function initialises the app by combining the use of the Popup, Locator and Law modules
   // You can string together these three modules yourself however you want, by writing a new function.
   cc.initialise = function(options, complete, error) {
+    options = options || {};
     var law = new cc.Law(options.law);
 
     if (!complete) complete = function() {};
     if (!error) error = function() {};
 
-    // I hardcoded this because I cba to refactor a fuck load of code.
-    // Bad developer. Bad.
+    var cookieName =
+      (options.cookie && options.cookie.name) || 'cookieconsent_status';
     var allowed = Object.keys(cc.status);
-    var answer = util.getCookie('cookieconsent_status');
+    var answer = util.getCookie(cookieName);
     var match = allowed.indexOf(answer) >= 0;
 
     // if they have already answered
@@ -1697,22 +1840,23 @@
     cc.getCountryCode(
       options,
       function(result) {
-        // don't need the law or location options anymore
-        delete options.law;
-        delete options.location;
+        // clone or safely adjust options without mutating input where possible
+        var popupOpts = util.deepExtend({}, options);
+        delete popupOpts.law;
+        delete popupOpts.location;
 
         if (result.code) {
-          options = law.applyLaw(options, result.code);
+          popupOpts = law.applyLaw(popupOpts, result.code);
         }
 
-        complete(new cc.Popup(options));
+        complete(new cc.Popup(popupOpts));
       },
       function(err) {
-        // don't need the law or location options anymore
-        delete options.law;
-        delete options.location;
+        var popupOpts = util.deepExtend({}, options);
+        delete popupOpts.law;
+        delete popupOpts.location;
 
-        error(err, new cc.Popup(options));
+        error(err, new cc.Popup(popupOpts));
       }
     );
   };
@@ -1722,6 +1866,7 @@
   // options (which can configure the `law` and `location` modules) and fires a callback with which
   // passes an object `{code: countryCode}` as the first argument (which can have undefined properties)
   cc.getCountryCode = function(options, complete, error) {
+    options = options || {};
     if (options.law && options.law.countryCode) {
       complete({
         code: options.law.countryCode
@@ -1744,5 +1889,10 @@
   // prevent this code from being run twice
   cc.hasInitialised = true;
 
-  window.cookieconsent = cc;
-})(window.cookieconsent || {});
+  if (typeof window !== 'undefined') {
+    window.cookieconsent = cc;
+  }
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = cc;
+  }
+})(typeof window !== 'undefined' ? (window.cookieconsent || {}) : {});
