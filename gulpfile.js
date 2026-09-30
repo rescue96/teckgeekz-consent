@@ -38,7 +38,7 @@ gulp.task('minify:js', function () {
 
 gulp.task('minify:css', function () {
   return gulp.src(cssBuildFiles)            // get files
-    .pipe(autoprefixer({browsers: ['IE 10', 'last 2 versions']}))
+    .pipe(autoprefixer())                   // use browserslist from package.json
     .pipe(minifyCSS())                      // minify them
     .pipe(concat('cookieconsent.min.css'))  // combine them
     .pipe(gulp.dest(buildFolder));          // save under a new name

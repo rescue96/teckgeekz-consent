@@ -1,6 +1,6 @@
 {
   "name": "teckgeekz-consent",
-  "version": "3.1.6",
+  "version": "3.1.7",
   "description": "Lightweight Cookie Consent plugin with Google Consent Mode v2, granular preferences modal, and multi-framework support by Teckgeekz",
   "main": "build/cookieconsent.min.js",
   "types": "index.d.ts",
@@ -35,7 +35,11 @@
     "gulp-terser": "^1.2.0",
     "yargs": "^13.2.4"
   },
-  "homepage": "http://teckgeekz.com",
+  "homepage": "https://teckgeekz.com",
+  "browserslist": [
+    "defaults",
+    "not dead"
+  ],
   "scripts": {
     "build": "gulp build",
     "verify": "gulp verify",
