@@ -750,6 +750,14 @@ For business inquiries, custom implementation support, or technical consulting, 
 
 ---
 
+## Compliance & Industry Standards Audit
+
+`teckgeekz-consent` v3.1.6 has undergone an independent open-source regulatory and technical audit, achieving an overall compliance score of **Grade A (93.4/100)** across GDPR, ePrivacy, Google Consent Mode v2, CCPA/CPRA, and WCAG AA standards.
+
+Read the full evaluation in the [Compliance Audit Report](./COMPLIANCE_REPORT.md).
+
+---
+
 ## License
 
 This project is open-source software licensed under the [MIT License](./LICENSE.md). You are free to use, modify, distribute, and embed it in commercial and personal projects. See [LICENSE.md](./LICENSE.md) (or [licence](./licence)) for the full multi-generation license text and technology credits.

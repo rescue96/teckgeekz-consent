@@ -9,7 +9,8 @@
     "src/",
     "index.d.ts",
     "README.md",
-    "LICENSE.md"
+    "LICENSE.md",
+    "COMPLIANCE_REPORT.md"
   ],
   "keywords": [
     "cookie-consent",
