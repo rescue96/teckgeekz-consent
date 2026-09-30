@@ -416,4 +416,38 @@ test('CookiePopup automatically updates Google Consent Mode v2 when enabled', ()
   assert.strictEqual(lastEvent.consent_ad_storage, 'denied');
 });
 
+test('setStatus, clearStatus, and reject synchronize category cookies (analytics & marketing)', () => {
+  setupMockDom();
+  delete require.cache[require.resolve('../src/cookieconsent.js')];
+  const cookieconsent = require('../src/cookieconsent.js');
+
+  const popup = new cookieconsent.Popup({
+    type: 'opt-in',
+    googleConsentMode: true
+  });
+
+  // 1. Allowing sets status to allow and category cookies to true
+  popup.setStatus(cookieconsent.status.allow);
+  assert.strictEqual(cookieconsent.utils.getCookie('cookieconsent_status'), 'allow');
+  assert.strictEqual(cookieconsent.utils.getCookie('analytics'), 'true');
+  assert.strictEqual(cookieconsent.utils.getCookie('marketing'), 'true');
+
+  // 2. Denying sets status to deny and category cookies to false
+  popup.setStatus(cookieconsent.status.deny);
+  assert.strictEqual(cookieconsent.utils.getCookie('cookieconsent_status'), 'deny');
+  assert.strictEqual(cookieconsent.utils.getCookie('analytics'), 'false');
+  assert.strictEqual(cookieconsent.utils.getCookie('marketing'), 'false');
+
+  // 3. Clear status removes status and category cookies completely
+  popup.clearStatus();
+  assert.strictEqual(cookieconsent.utils.getCookie('cookieconsent_status'), undefined);
+  assert.strictEqual(cookieconsent.utils.getCookie('analytics'), undefined);
+  assert.strictEqual(cookieconsent.utils.getCookie('marketing'), undefined);
+
+  // 4. Granular overrides in setStatus
+  popup.setStatus(cookieconsent.status.allow, { analytics: true, marketing: false });
+  assert.strictEqual(cookieconsent.utils.getCookie('analytics'), 'true');
+  assert.strictEqual(cookieconsent.utils.getCookie('marketing'), 'false');
+});
+
 

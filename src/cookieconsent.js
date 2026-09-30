@@ -92,14 +92,14 @@
 
       // Seamless fallback for file:// protocol, sandboxed iframes, or when cookies are disabled
       util._cookieMemory = util._cookieMemory || {};
-      var isExpired = (expiryDays !== undefined && expiryDays < 0) || !value;
+      var isExpired = (expiryDays !== undefined && expiryDays < 0) || value === '' || value === null || value === undefined;
 
       if (typeof localStorage !== 'undefined') {
         try {
           if (isExpired) {
             localStorage.removeItem('cc_' + name);
           } else {
-            localStorage.setItem('cc_' + name, value);
+            localStorage.setItem('cc_' + name, String(value));
           }
         } catch (e) {}
       }
@@ -107,7 +107,7 @@
       if (isExpired) {
         delete util._cookieMemory[name];
       } else {
-        util._cookieMemory[name] = value;
+        util._cookieMemory[name] = String(value);
       }
     },
 
@@ -788,7 +788,7 @@
       }
     };
 
-    CookiePopup.prototype.setStatus = function(status) {
+    CookiePopup.prototype.setStatus = function(status, categoryOverrides) {
       var c = this.options.cookie;
       var value = util.getCookie(c.name);
       var chosenBefore = Object.keys(cc.status).indexOf(value) >= 0;
@@ -805,12 +805,40 @@
           c.sameSite
         );
 
+        var isAllow = (status === cc.status.allow || status === cc.status.dismiss);
+
+        // Keep category cookies (analytics & marketing) 100% in sync with consent status
+        var finalAnalytics = false;
+        var finalMarketing = false;
+
+        if (categoryOverrides && typeof categoryOverrides === 'object') {
+          finalAnalytics = !!categoryOverrides.analytics;
+          finalMarketing = !!categoryOverrides.marketing;
+        } else if (status === cc.status.deny) {
+          finalAnalytics = false;
+          finalMarketing = false;
+        } else if (isAllow) {
+          finalAnalytics = true;
+          finalMarketing = true;
+        }
+
+        util.setCookie('analytics', finalAnalytics ? 'true' : 'false', c.expiryDays, c.domain, c.path, c.secure, c.sameSite);
+        util.setCookie('marketing', finalMarketing ? 'true' : 'false', c.expiryDays, c.domain, c.path, c.secure, c.sameSite);
+
+        // Log GDPR audit record
+        if (typeof cc.recordConsent === 'function') {
+          cc.recordConsent(finalAnalytics, finalMarketing, this.options);
+        }
+
         if (this.options.googleConsentMode) {
           var gcm = typeof this.options.googleConsentMode === 'object'
             ? this.options.googleConsentMode
             : {};
-          var isAllow = (status === cc.status.allow || status === cc.status.dismiss);
-          cc.updateGoogleConsent(isAllow ? 'granted' : 'denied', gcm);
+          if (categoryOverrides && typeof categoryOverrides === 'object') {
+            cc.updateGoogleConsent(categoryOverrides, gcm);
+          } else {
+            cc.updateGoogleConsent(isAllow ? 'granted' : 'denied', gcm);
+          }
         }
 
         this.options.onStatusChange.call(this, status, chosenBefore);
@@ -832,6 +860,16 @@
     CookiePopup.prototype.clearStatus = function() {
       var c = this.options.cookie;
       util.setCookie(c.name, '', -1, c.domain, c.path, c.secure, c.sameSite);
+      util.setCookie('analytics', '', -1, c.domain, c.path, c.secure, c.sameSite);
+      util.setCookie('marketing', '', -1, c.domain, c.path, c.secure, c.sameSite);
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.removeItem('cc_' + c.name);
+          localStorage.removeItem('cc_analytics');
+          localStorage.removeItem('cc_marketing');
+          localStorage.removeItem('cookieconsent_consent_record');
+        } catch (e) {}
+      }
     };
 
     CookiePopup.prototype.openPreferences = function(customOptions) {
@@ -846,11 +884,11 @@
             'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies',
           onSave: function(consents) {
             var anyGranted = consents.analytics || consents.marketing;
-            self.setStatus(anyGranted ? cc.status.allow : cc.status.deny);
+            self.setStatus(anyGranted ? cc.status.allow : cc.status.deny, consents);
             self.close(true);
           },
           onReject: function() {
-            self.setStatus(cc.status.deny);
+            self.setStatus(cc.status.deny, { analytics: false, marketing: false });
             self.close(true);
           }
         },
@@ -2185,6 +2223,43 @@
     return payload;
   };
 
+  // Logs a structured consent record for GDPR compliance
+  cc.recordConsent = function(analytics, marketing, options) {
+    options = options || {};
+    if (typeof options.storeConsentRecord === 'function') {
+      options.storeConsentRecord(analytics, marketing);
+      return;
+    }
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.storeConsentRecord === 'function'
+    ) {
+      window.storeConsentRecord(analytics, marketing);
+      return;
+    }
+    try {
+      var record = {
+        analytics: !!analytics,
+        marketing: !!marketing,
+        timestamp: new Date().toISOString(),
+        url:
+          typeof window !== 'undefined' && window.location
+            ? window.location.href
+            : '',
+        userAgent:
+          typeof window !== 'undefined' && window.navigator
+            ? window.navigator.userAgent
+            : ''
+      };
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(
+          'cookieconsent_consent_record',
+          JSON.stringify(record)
+        );
+      }
+    } catch (e) {}
+  };
+
   // Creates and manages the Teckgeekz Granular Cookie Preferences Modal
   cc.createCookieModal = function(options) {
     if (typeof document === 'undefined') return null;
@@ -2209,9 +2284,10 @@
       var activeOpts =
         (existingModal && existingModal._teckgeekzOptions) || options;
       var cOpts = activeOpts.cookie || {};
+      var strVal = (val === true || val === 'true') ? 'true' : 'false';
       util.setCookie(
         name,
-        val,
+        strVal,
         cOpts.expiryDays || 365,
         cOpts.domain || '',
         cOpts.path || '/',
@@ -2237,38 +2313,7 @@
     var recordConsent = function(analytics, marketing) {
       var activeOpts =
         (existingModal && existingModal._teckgeekzOptions) || options;
-      if (typeof activeOpts.storeConsentRecord === 'function') {
-        activeOpts.storeConsentRecord(analytics, marketing);
-        return;
-      }
-      if (
-        typeof window !== 'undefined' &&
-        typeof window.storeConsentRecord === 'function'
-      ) {
-        window.storeConsentRecord(analytics, marketing);
-        return;
-      }
-      try {
-        var record = {
-          analytics: analytics,
-          marketing: marketing,
-          timestamp: new Date().toISOString(),
-          url:
-            typeof window !== 'undefined' && window.location
-              ? window.location.href
-              : '',
-          userAgent:
-            typeof window !== 'undefined' && window.navigator
-              ? window.navigator.userAgent
-              : ''
-        };
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem(
-            'cookieconsent_consent_record',
-            JSON.stringify(record)
-          );
-        }
-      } catch (e) {}
+      cc.recordConsent(analytics, marketing, activeOpts);
     };
 
     var notifyGtag = function(analyticsVal, marketingVal) {
