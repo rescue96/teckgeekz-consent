@@ -740,14 +740,16 @@ This project is maintained, optimized, and enhanced by **[Teckgeekz](https://tec
 
 For business inquiries, custom implementation support, or technical consulting, visit **[teckgeekz.com](https://teckgeekz.com)**.
 
-### Upstream Acknowledgements
+### Upstream & Technology Acknowledgements
 
 - **Silktide Ltd**: Original author and creator of the open-source Cookie Consent library (v1 - v3).
-- **Osano**: Subsequent steward and maintainer of Cookie Consent v3.
+- **Osano, Inc.**: Subsequent steward and maintainer of Cookie Consent v3.
+- **Google Consent Mode v2**: Integration protocols and specifications defined by Google for global privacy compliance.
+- **MDN Web Docs (Mozilla)**: Educational and reference documentation for HTTP Cookies and Web Storage security guidelines.
 - All open-source contributors who have contributed fixes and translations over the years.
 
 ---
 
 ## License
 
-This project is open-source software licensed under the [MIT License](./licence). You are free to use, modify, distribute, and embed it in commercial and personal projects.
+This project is open-source software licensed under the [MIT License](./LICENSE.md). You are free to use, modify, distribute, and embed it in commercial and personal projects. See [LICENSE.md](./LICENSE.md) (or [licence](./licence)) for the full multi-generation license text and technology credits.
