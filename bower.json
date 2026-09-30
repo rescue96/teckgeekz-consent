@@ -1,11 +1,31 @@
 {
-  "name": "cookieconsent",
-  "version": "3.1.1",
-  "homepage": "http://cookieconsent.osano.com/",
-  "authors": ["Osano"],
-  "description": "Osano cookie consent plugin",
-  "main": ["build/cookieconsent.min.js", "build/cookieconsent.min.css"],
-  "keywords": ["cookieconsent", "cookie", "law"],
+  "name": "teckgeekz-consent",
+  "version": "3.1.6",
+  "homepage": "https://teckgeekz.com",
+  "authors": [
+    "Teckgeekz"
+  ],
+  "description": "Lightweight Cookie Consent plugin with Google Consent Mode v2, granular preferences modal, and multi-framework support by Teckgeekz",
+  "main": [
+    "build/cookieconsent.min.js",
+    "build/cookieconsent.min.css"
+  ],
+  "keywords": [
+    "cookie-consent",
+    "gdpr",
+    "google-consent-mode-v2",
+    "consent-mode-v2",
+    "ccpa",
+    "privacy",
+    "cookie-banner",
+    "gtm"
+  ],
   "license": "MIT",
-  "ignore": ["**/.*", "node_modules", "bower_components", "test", "tests"]
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
 }
