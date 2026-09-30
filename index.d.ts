@@ -1,4 +1,4 @@
-// Type definitions for teckgeekz-consent 3.1.7
+// Type definitions for teckgeekz-consent 3.1.8
 // Project: https://github.com/rescue96/teckgeekz-consent
 // Maintained by: Teckgeekz (https://teckgeekz.com)
 
